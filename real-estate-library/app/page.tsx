@@ -1,64 +1,182 @@
-import Image from "next/image";
-
 export default function Home() {
+  const courses = [
+    {
+      title: "MLS Listing Essentials",
+      description: "Create and publish listings accurately with minimal supervision.",
+    },
+    {
+      title: "Transaction Workflows",
+      description: "Handle documents, approvals, and submissions step-by-step.",
+    },
+    {
+      title: "Client Intake & CRM",
+      description: "Standardize how new clients are added and managed.",
+    },
+    {
+      title: "Brokerage Software Stack",
+      description: "Train staff on the exact tools your company uses.",
+    },
+  ];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-black dark:text-zinc-50">
+      {/* NAVBAR */}
+      <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-black/70">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <div className="font-semibold tracking-tight">
+            Real Estate Library
+          </div>
+
+          <div className="flex items-center gap-3">
             <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              href="#courses"
+              className="text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
+              Courses
+            </a>
             <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              href="#signup"
+              className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              For Businesses
+            </a>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+      </header>
+
+      <main className="mx-auto max-w-7xl px-6">
+        {/* HERO */}
+        <section className="grid items-center gap-12 py-20 lg:grid-cols-2">
+          <div>
+            <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-emerald-600">
+              Real estate training platform
+            </p>
+
+            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+              Replace shadowing with structured training.
+            </h1>
+
+            <p className="mt-6 max-w-xl text-lg text-zinc-600 dark:text-zinc-400">
+              Help new hires learn faster with repeatable, workflow-based training.
+              Reduce onboarding time and keep processes consistent across your team.
+            </p>
+
+            <div className="mt-8 flex gap-4">
+              <a
+                href="#signup"
+                className="rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+              >
+                Request demo
+              </a>
+              <a
+                href="#courses"
+                className="rounded-full border border-zinc-300 px-6 py-3 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+              >
+                Browse courses
+              </a>
+            </div>
+
+            <div className="mt-10 flex gap-8 text-sm text-zinc-500">
+              <div>
+                <p className="text-xl font-semibold text-zinc-900 dark:text-white">3x</p>
+                Faster onboarding
+              </div>
+              <div>
+                <p className="text-xl font-semibold text-zinc-900 dark:text-white">100%</p>
+                Standardized training
+              </div>
+              <div>
+                <p className="text-xl font-semibold text-zinc-900 dark:text-white">24/7</p>
+                Access
+              </div>
+            </div>
+          </div>
+
+          {/* MOCK DASHBOARD */}
+          <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-semibold">Onboarding Progress</h3>
+              <span className="text-xs text-emerald-600">Live Preview</span>
+            </div>
+
+            <div className="space-y-4">
+              {["MLS Setup", "Documents", "CRM", "Compliance"].map((item, i) => (
+                <div key={item}>
+                  <div className="mb-1 flex justify-between text-sm">
+                    <span>{item}</span>
+                    <span>{(i + 1) * 20}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-800">
+                    <div
+                      className="h-2 rounded-full bg-emerald-500"
+                      style={{ width: `${(i + 1) * 20}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* COURSES */}
+        <section id="courses" className="py-16">
+          <div className="mb-10 max-w-2xl">
+            <h2 className="text-3xl font-semibold tracking-tight">
+              Ready-to-use training modules
+            </h2>
+            <p className="mt-3 text-zinc-600 dark:text-zinc-400">
+              Give your team structured workflows instead of inconsistent
+              shadowing and guesswork.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            {courses.map((course) => (
+              <div
+                key={course.title}
+                className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950"
+              >
+                <h3 className="text-lg font-semibold">{course.title}</h3>
+                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                  {course.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section
+          id="signup"
+          className="mb-20 rounded-3xl bg-emerald-600 px-8 py-14 text-white"
+        >
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
+            <div>
+              <h2 className="text-3xl font-semibold">
+                Train your team the scalable way.
+              </h2>
+              <p className="mt-4 text-emerald-100">
+                Replace manual onboarding with structured learning paths tailored
+                to your brokerage’s workflow.
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              <a
+                href="#"
+                className="rounded-full bg-white px-6 py-3 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+              >
+                Contact sales
+              </a>
+              <a
+                href="#"
+                className="rounded-full border border-white px-6 py-3 text-sm font-medium hover:bg-white/10"
+              >
+                Book demo
+              </a>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   );
