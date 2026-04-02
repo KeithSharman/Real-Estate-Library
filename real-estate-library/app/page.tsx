@@ -44,7 +44,7 @@ export default function Home() {
     </a>
 
     <a
-      href="#signup"
+      href="/business"
       className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
     >
       For Businesses
@@ -172,13 +172,13 @@ export default function Home() {
 
             <div className="flex gap-4">
               <a
-                href="#"
+                href="/business"
                 className="rounded-full bg-white px-6 py-3 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
               >
                 Contact sales
               </a>
               <a
-                href="#"
+                href="/business"
                 className="rounded-full border border-white px-6 py-3 text-sm font-medium hover:bg-white/10"
               >
                 Book demo

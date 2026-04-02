@@ -124,6 +124,12 @@ export default function CoursesPage() {
               Back to dashboard
             </Link>
             <Link
+              href="/business"
+              className="inline-flex items-center justify-center rounded-full border border-zinc-300 px-5 py-3 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+            >
+              Business Access
+            </Link>
+            <Link
               href="/"
               className="inline-flex items-center justify-center rounded-full bg-zinc-950 px-5 py-3 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
             >
