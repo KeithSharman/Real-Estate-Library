@@ -3,13 +3,15 @@ import type {ReactNode} from "react";
 
 const inProgressCourses = [
   {
-    title: "MLS Listing Essentials",
+    id: "mls-listing-essentials-demo",
+    title: "MLS Listing Essentials [Demo]",
     description: "Learn the full listing workflow from setup to publication.",
     progress: 72,
     lastAccessed: "Today",
     nextLesson: "Publishing the final listing draft",
   },
   {
+    id: "transaction-document-workflow",
     title: "Transaction Document Workflow",
     description: "Practice document handling, review steps, and submission order.",
     progress: 41,
@@ -17,6 +19,7 @@ const inProgressCourses = [
     nextLesson: "Required signatures and approvals",
   },
   {
+    id: "client-intake-crm-setup",
     title: "Client Intake & CRM Setup",
     description: "Standardize lead capture, contact entry, and follow-up tasks.",
     progress: 18,
@@ -47,9 +50,9 @@ const completedCourses = [
 ];
 
 const recommendedCourses = [
-  "Property Showing Workflow",
-  "Offer Preparation Essentials",
-  "Lead Response Best Practices",
+  { id: "property-showing-workflow", title: "Property Showing Workflow" },
+  { id: "offer-preparation-essentials", title: "Offer Preparation Essentials" },
+  { id: "lead-response-best-practices", title: "Lead Response Best Practices" },
 ];
 
 export default function DashboardPage() {
@@ -124,7 +127,7 @@ export default function DashboardPage() {
                       </div>
 
                       <Link
-                        href="/courses"
+                        href={`/courses/${course.id}`}
                         className="inline-flex h-fit items-center justify-center rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
                       >
                         Continue
@@ -233,12 +236,13 @@ export default function DashboardPage() {
             <CardSection title="Recommended next steps" subtitle="Good courses to enroll in next">
               <div className="space-y-3">
                 {recommendedCourses.map((course) => (
-                  <div
-                    key={course}
-                    className="rounded-2xl border border-zinc-200 p-4 dark:border-zinc-800"
+                  <Link
+                    key={course.id}
+                    href={`/courses/${course.id}`}
+                    className="block rounded-2xl border border-zinc-200 p-4 transition hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
                   >
-                    <p className="font-medium">{course}</p>
-                  </div>
+                    <p className="font-medium">{course.title}</p>
+                  </Link>
                 ))}
               </div>
 
