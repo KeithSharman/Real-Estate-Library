@@ -1,279 +1,275 @@
-import Link from "next/link";
+'use client';
 
-const courses = [
-  {
-    id: "mls-listing-essentials-demo",
-    title: "MLS Listing Essentials [Demo]",
-    category: "Listings",
-    level: "Beginner",
-    duration: "2.5 hours",
-    description:
-      "Demo course showing a complete listing workflow. Works without backend integration - use this to test the course functionality.",
-    featured: true,
-    skills: ["MLS Platform", "Property Marketing", "Compliance"],
-  },
-  {
-    id: "mls-listing-essentials",
-    title: "MLS Listing Essentials",
-    category: "Listings",
-    level: "Beginner",
-    duration: "2.5 hours",
-    description:
-      "Learn the full process of creating, reviewing, and publishing a property listing correctly.",
-    skills: ["MLS Platform", "Property Marketing", "Compliance"],
-  },
-  {
-    id: "transaction-document-workflow",
-    title: "Transaction Document Workflow",
-    category: "Compliance",
-    level: "Intermediate",
-    duration: "3 hours",
-    description:
-      "Understand the sequence for preparing, signing, and submitting real estate documents.",
-    skills: ["Document Management", "Legal Compliance", "Transaction Processing"],
-  },
-  {
-    id: "client-intake-crm-setup",
-    title: "Client Intake & CRM Setup",
-    category: "Sales",
-    level: "Beginner",
-    duration: "1.5 hours",
-    description:
-      "Standardize how new client information is entered and managed in your CRM.",
-    skills: ["CRM Management", "Client Relations", "Lead Conversion"],
-  },
-  {
-    id: "brokerage-software-stack",
-    title: "Brokerage Software Stack",
-    category: "Systems",
-    level: "Intermediate",
-    duration: "2 hours",
-    description:
-      "Train employees on the software tools your brokerage uses every day.",
-    skills: ["Software Training", "Workflow Optimization", "Team Productivity"],
-  },
-  {
-    id: "offer-preparation-essentials",
-    title: "Offer Preparation Essentials",
-    category: "Offers",
-    level: "Advanced",
-    duration: "3.5 hours",
-    description:
-      "Walk through the steps involved in creating and submitting an offer package.",
-    skills: ["Offer Writing", "Negotiation", "Contract Law"],
-  },
-  {
-    id: "property-showing-workflow",
-    title: "Property Showing Workflow",
-    category: "Operations",
-    level: "Beginner",
-    duration: "1 hour",
-    description:
-      "Build consistent habits for scheduling, preparing for, and following up on showings.",
-    skills: ["Customer Service", "Property Presentation", "Follow-up Process"],
-  },
-];
+import { auth, provider } from './_utils/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { signInWithPopup, signOut } from 'firebase/auth';
 
-const categories = [
-  "All courses",
-  "Listings",
-  "Compliance",
-  "Sales",
-  "Systems",
-  "Offers",
-  "Operations",
-];
+export default function Home() {
+  const [user] = useAuthState(auth);
 
-export default function CoursesPage() {
+  const courses = [
+    {
+      title: "MLS Listing Essentials",
+      description: "Create and publish listings accurately with minimal supervision.",
+    },
+    {
+      title: "Transaction Workflows",
+      description: "Handle documents, approvals, and submissions step-by-step.",
+    },
+    {
+      title: "Client Intake & CRM",
+      description: "Standardize how new clients are added and managed.",
+    },
+    {
+      title: "Brokerage Software Stack",
+      description: "Train staff on the exact tools your company uses.",
+    },
+  ];
+
+  const signin = async () => {
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      alert(error);
+    }
+  };
+
+  const logout = async () => {
+    await signOut(auth);
+  };
+
   return (
-    <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
-      <div className="mx-auto max-w-7xl px-6 py-8 lg:px-10">
-        {/* Breadcrumb Navigation */}
-        <nav className="mb-6">
-          <ol className="flex items-center space-x-2 text-sm">
-            <li>
-              <Link href="/" className="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200">
-                Home
-              </Link>
-            </li>
-            <li className="text-zinc-400">/</li>
-            <li className="text-zinc-900 dark:text-zinc-100 font-medium">
-              Course Catalog
-            </li>
-          </ol>
-        </nav>
-
-        <header className="mb-8 flex flex-col gap-4 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">
-              Course catalog
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-              Browse and enroll in training modules
-            </h1>
-            <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-              Find the right course path for onboarding, compliance, and workflow training.
-            </p>
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-black dark:text-zinc-50">
+      <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-black/70">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <div className="font-semibold tracking-tight">
+            <a href="/">Real Estate Library</a>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
+          <div className="flex items-center gap-3">
+            <a
               href="/dashboard"
-              className="inline-flex items-center justify-center rounded-full border border-zinc-300 px-5 py-3 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+              className="text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
             >
-              Back to dashboard
-            </Link>
-            <Link
-              href="/business"
-              className="inline-flex items-center justify-center rounded-full border border-zinc-300 px-5 py-3 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+              Dashboard
+            </a>
+
+            <a
+              href="#courses"
+              className="text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
             >
-              Business Access
-            </Link>
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center rounded-full bg-zinc-950 px-5 py-3 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
-            >
-              Home
-            </Link>
+              Courses
+            </a>
+
+            {user ? (
+              <button
+                onClick={logout}
+                className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+              >
+                Logout
+              </button>
+            ) : (
+              <button
+                onClick={signin}
+                className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+              >
+                Sign in with Google
+              </button>
+            )}
           </div>
-        </header>
+        </div>
+      </header>
 
-        <section className="grid gap-8 lg:grid-cols-[1.6fr_0.8fr]">
-          <div>
-            <div className="mb-6 rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex-1">
-                  <label
-                    htmlFor="search"
-                    className="mb-2 block text-sm font-medium text-zinc-600 dark:text-zinc-400"
-                  >
-                    Search courses
-                  </label>
-                  <input
-                    id="search"
-                    type="text"
-                    placeholder="Search by course title, category, or keyword"
-                    className="w-full rounded-full border border-zinc-300 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-950 dark:focus:border-emerald-500"
-                  />
-                </div>
+      <main className="mx-auto max-w-7xl px-6">
+        {!user ? (
+          <section className="grid items-center gap-12 py-20 lg:grid-cols-2">
+            <div>
+              <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-emerald-600">
+                Real estate training platform
+              </p>
 
-                <div className="flex flex-wrap gap-2">
-                  {categories.map((category) => (
-                    <button
-                      key={category}
-                      className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
+              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+                Replace shadowing with structured training.
+              </h1>
+
+              <p className="mt-6 max-w-xl text-lg text-zinc-600 dark:text-zinc-400">
+                Help new hires learn faster with repeatable, workflow-based training.
+                Reduce onboarding time and keep processes consistent across your team.
+              </p>
+
+              <div className="mt-8 flex gap-4">
+                <button
+                  onClick={signin}
+                  className="rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+                >
+                  Sign in with Google
+                </button>
+                <a
+                  href="#courses"
+                  className="rounded-full border border-zinc-300 px-6 py-3 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                >
+                  Browse courses
+                </a>
               </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              {courses.map((course) => (
-                <article
-                  key={course.title}
-                  className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950"
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                      {course.category}
-                    </span>
-                    <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                      {course.level}
-                    </span>
-                  </div>
+            <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-semibold">Onboarding Progress</h3>
+                <span className="text-xs text-emerald-600">Preview</span>
+              </div>
 
-                  <h2 className="mt-4 text-xl font-semibold tracking-tight">
-                    {course.title}
-                  </h2>
-
-                  <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                    {course.description}
-                  </p>
-
-                  <div className="mt-5 flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400">
-                    <span>{course.duration}</span>
-                    <span>Certificate eligible</span>
-                  </div>
-
-                  <div className="mt-5 flex gap-3">
-                    <Link
-                      href={`/courses/${course.id}`}
-                      className="flex-1 rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-500"
-                    >
-                      Enroll
-                    </Link>
-                    <Link
-                      href={`/courses/${course.id}`}
-                      className="rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
-                    >
-                      Preview
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-
-          <aside className="space-y-6">
-            <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">
-                Recommended path
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-                New employee onboarding
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                Start with beginner courses, then move into documents, compliance,
-                and workflow-specific modules.
-              </p>
-
-              <div className="mt-5 space-y-3">
-                {[
-                  "MLS Listing Essentials",
-                  "Client Intake & CRM Setup",
-                  "Transaction Document Workflow",
-                ].map((item, index) => (
-                  <div
-                    key={item}
-                    className="flex items-center gap-3 rounded-2xl border border-zinc-200 p-4 dark:border-zinc-800"
-                  >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-950 text-sm font-semibold text-white dark:bg-zinc-50 dark:text-zinc-950">
-                      {index + 1}
+              <div className="space-y-4">
+                {["MLS Setup", "Documents", "CRM", "Compliance"].map((item, i) => (
+                  <div key={item}>
+                    <div className="mb-1 flex justify-between text-sm">
+                      <span>{item}</span>
+                      <span>{(i + 1) * 20}%</span>
                     </div>
-                    <p className="text-sm font-medium">{item}</p>
+                    <div className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-800">
+                      <div
+                        className="h-2 rounded-full bg-emerald-500"
+                        style={{ width: `${(i + 1) * 20}%` }}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
+            </div>
+          </section>
+        ) : (
+          <>
+            <section className="grid items-center gap-12 py-20 lg:grid-cols-2">
+              <div>
+                <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-emerald-600">
+                  Signed in as {user.email}
+                </p>
 
-              <Link
-                href="/dashboard"
-                className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-zinc-950 px-4 py-3 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
-              >
-                Start from dashboard
-              </Link>
+                <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+                  Replace shadowing with structured training.
+                </h1>
+
+                <p className="mt-6 max-w-xl text-lg text-zinc-600 dark:text-zinc-400">
+                  Help new hires learn faster with repeatable, workflow-based training.
+                  Reduce onboarding time and keep processes consistent across your team.
+                </p>
+
+                <div className="mt-8 flex gap-4">
+                  <a
+                    href="#signup"
+                    className="rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+                  >
+                    Request demo
+                  </a>
+                  <a
+                    href="#courses"
+                    className="rounded-full border border-zinc-300 px-6 py-3 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                  >
+                    Browse courses
+                  </a>
+                </div>
+
+                <div className="mt-10 flex gap-8 text-sm text-zinc-500">
+                  <div>
+                    <p className="text-xl font-semibold text-zinc-900 dark:text-white">3x</p>
+                    Faster onboarding
+                  </div>
+                  <div>
+                    <p className="text-xl font-semibold text-zinc-900 dark:text-white">100%</p>
+                    Standardized training
+                  </div>
+                  <div>
+                    <p className="text-xl font-semibold text-zinc-900 dark:text-white">24/7</p>
+                    Access
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="font-semibold">Onboarding Progress</h3>
+                  <span className="text-xs text-emerald-600">Live Preview</span>
+                </div>
+
+                <div className="space-y-4">
+                  {["MLS Setup", "Documents", "CRM", "Compliance"].map((item, i) => (
+                    <div key={item}>
+                      <div className="mb-1 flex justify-between text-sm">
+                        <span>{item}</span>
+                        <span>{(i + 1) * 20}%</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-800">
+                        <div
+                          className="h-2 rounded-full bg-emerald-500"
+                          style={{ width: `${(i + 1) * 20}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </section>
 
-            <section className="rounded-3xl border border-zinc-200 bg-zinc-950 p-6 text-white dark:border-zinc-800">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
-                For businesses
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-                Turn training into a repeatable system
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-zinc-300">
-                Use structured courses to reduce shadowing time, standardize onboarding,
-                and keep your team aligned.
-              </p>
-              <button className="mt-5 w-full rounded-full bg-emerald-600 px-4 py-3 text-sm font-medium text-white hover:bg-emerald-500">
-                Request business access
-              </button>
+            <section id="courses" className="py-16">
+              <div className="mb-10 max-w-2xl">
+                <h2 className="text-3xl font-semibold tracking-tight">
+                  Ready-to-use training modules
+                </h2>
+                <p className="mt-3 text-zinc-600 dark:text-zinc-400">
+                  Give your team structured workflows instead of inconsistent
+                  shadowing and guesswork.
+                </p>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                {courses.map((course) => (
+                  <div
+                    key={course.title}
+                    className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950"
+                  >
+                    <h3 className="text-lg font-semibold">{course.title}</h3>
+                    <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                      {course.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </section>
-          </aside>
-        </section>
-      </div>
-    </main>
+
+            <section
+              id="signup"
+              className="mb-20 rounded-3xl bg-emerald-600 px-8 py-14 text-white"
+            >
+              <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
+                <div>
+                  <h2 className="text-3xl font-semibold">
+                    Train your team the scalable way.
+                  </h2>
+                  <p className="mt-4 text-emerald-100">
+                    Replace manual onboarding with structured learning paths tailored
+                    to your brokerage’s workflow.
+                  </p>
+                </div>
+
+                <div className="flex gap-4">
+                  <a
+                    href="/business"
+                    className="rounded-full bg-white px-6 py-3 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+                  >
+                    Contact sales
+                  </a>
+                  <a
+                    href="/business"
+                    className="rounded-full border border-white px-6 py-3 text-sm font-medium hover:bg-white/10"
+                  >
+                    Book demo
+                  </a>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
+      </main>
+    </div>
   );
 }
