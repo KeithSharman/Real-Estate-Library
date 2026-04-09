@@ -24,6 +24,7 @@ const QUIZ_ATTEMPTS_COLLECTION = "quizAttempts";
 const ADMINS_COLLECTION = "admins";
 
 const DEFAULT_PASSING_PERCENT = 80;
+const DEFAULT_BOOTSTRAP_TENANT_ID = process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID || "tenant-acme";
 
 export const DEMO_COURSE_TEMPLATE_SEED = {
 	id: "mls-listing-essentials-template",
@@ -345,18 +346,60 @@ function normalizeSteps(steps = []) {
 	return [...steps].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
-export async function getCurrentUserContext() {
+export async function ensureCurrentUserProfile(options = {}) {
 	const currentUser = requireAuthenticatedUser();
+	const { tenantId = DEFAULT_BOOTSTRAP_TENANT_ID } = options;
 	const userRef = doc(db, USERS_COLLECTION, currentUser.uid);
-	const userSnapshot = await getDoc(userRef);
+	let userSnapshot = await getDoc(userRef);
 
 	if (!userSnapshot.exists()) {
-		throw new Error(
-			"User profile not found. Create users/{uid} with tenantId before accessing courses."
-		);
+		await setDoc(userRef, {
+			tenantId,
+			displayName: currentUser.displayName ?? null,
+			email: currentUser.email ?? null,
+			createdAt: serverTimestamp(),
+			updatedAt: serverTimestamp(),
+		});
+
+		userSnapshot = await getDoc(userRef);
+
+		return {
+			created: true,
+			uid: currentUser.uid,
+			profile: userSnapshot.exists() ? userSnapshot.data() : null,
+		};
 	}
 
 	const userData = userSnapshot.data();
+
+	if (!userData.tenantId && tenantId) {
+		await updateDoc(userRef, {
+			tenantId,
+			updatedAt: serverTimestamp(),
+		});
+
+		userSnapshot = await getDoc(userRef);
+	}
+
+	return {
+		created: false,
+		uid: currentUser.uid,
+		profile: userSnapshot.data(),
+	};
+}
+
+export async function getCurrentUserContext(options = {}) {
+	const currentUser = requireAuthenticatedUser();
+	const { tenantId: preferredTenantId = DEFAULT_BOOTSTRAP_TENANT_ID } = options;
+	const ensuredProfile = await ensureCurrentUserProfile({ tenantId: preferredTenantId });
+	const userData = ensuredProfile.profile;
+
+	if (!userData) {
+		throw new Error(
+			`User profile not found for uid ${currentUser.uid}. Create users/{uid} with tenantId before accessing courses.`
+		);
+	}
+
 	const tenantId = userData.tenantId;
 
 	if (!tenantId) {

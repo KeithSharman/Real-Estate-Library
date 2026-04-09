@@ -1,15 +1,63 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { auth, provider } from '../_utils/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { signInWithPopup, signOut } from 'firebase/auth';
+import { ensureCurrentUserProfile } from '../_services/course-service';
 
 export default function Home() {
   const [user] = useAuthState(auth);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [profileBootstrapMessage, setProfileBootstrapMessage] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function bootstrapProfile() {
+      if (!user) {
+        if (isMounted) {
+          setProfileBootstrapMessage('');
+        }
+        return;
+      }
+
+      try {
+        const result = await ensureCurrentUserProfile();
+
+        if (!isMounted) {
+          return;
+        }
+
+        const tenantId = result?.profile?.tenantId ?? '(missing)';
+        if (result.created) {
+          setProfileBootstrapMessage(
+            `First-run checklist: created users/${result.uid} with tenantId ${tenantId}.`
+          );
+        } else {
+          setProfileBootstrapMessage(
+            `First-run checklist: users/${result.uid} is ready with tenantId ${tenantId}.`
+          );
+        }
+      } catch (bootstrapError) {
+        if (!isMounted) {
+          return;
+        }
+        setProfileBootstrapMessage(
+          `First-run checklist: unable to confirm user profile (${bootstrapError instanceof Error ? bootstrapError.message : 'unknown error'}).`
+        );
+      }
+    }
+
+    bootstrapProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   const courses = [
     {
@@ -91,6 +139,12 @@ export default function Home() {
       </header>
 
       <main className="mx-auto max-w-7xl px-6">
+        {user && profileBootstrapMessage && (
+          <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-200">
+            {profileBootstrapMessage}
+          </div>
+        )}
+
         {!user ? (
           <section className="grid items-center gap-12 py-20 lg:grid-cols-2">
             <div>
