@@ -768,6 +768,32 @@ export async function isCurrentUserTenantAdmin(existingContext) {
 	return adminSnapshot.exists();
 }
 
+export async function selfAssignCurrentUserAsTenantAdmin() {
+	const context = await getCurrentUserContext();
+	const adminRef = doc(
+		db,
+		TENANTS_COLLECTION,
+		context.tenantId,
+		ADMINS_COLLECTION,
+		context.uid
+	);
+
+	await setDoc(
+		adminRef,
+		{
+			uid: context.uid,
+			email: context.email ?? null,
+			createdAt: serverTimestamp(),
+		},
+		{ merge: true }
+	);
+
+	return {
+		uuid: context.uid,
+		tenantId: context.tenantId,
+	};
+}
+
 async function assertCurrentUserIsTenantAdmin(existingContext) {
 	const context = existingContext ?? (await getCurrentUserContext());
 	const isAdmin = await isCurrentUserTenantAdmin(context);

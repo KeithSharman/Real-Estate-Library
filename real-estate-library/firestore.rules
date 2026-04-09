@@ -9,6 +9,10 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(uid));
     }
 
+    function tenantDoc(tenantId) {
+      return get(/databases/$(database)/documents/tenants/$(tenantId));
+    }
+
     function hasProfile() {
       return signedIn() && profileDoc(request.auth.uid).exists();
     }
@@ -23,6 +27,10 @@ service cloud.firestore {
 
     function isTenantAdmin(tenantId) {
       return signedIn() && exists(/databases/$(database)/documents/tenants/$(tenantId)/admins/$(request.auth.uid));
+    }
+
+    function allowSelfAdminBootstrap(tenantId) {
+      return tenantDoc(tenantId).exists() && tenantDoc(tenantId).data.allowSelfAdminBootstrap == true;
     }
 
     match /users/{uid} {
@@ -40,7 +48,18 @@ service cloud.firestore {
 
       match /admins/{adminUid} {
         allow read: if isTenantMember(tenantId);
-        allow write: if false;
+
+        allow create: if (
+          isTenantAdmin(tenantId) ||
+          (
+            isTenantMember(tenantId) &&
+            adminUid == request.auth.uid &&
+            allowSelfAdminBootstrap(tenantId)
+          )
+        )
+        && request.resource.data.uid == adminUid;
+
+        allow update, delete: if isTenantAdmin(tenantId);
       }
 
       match /courseTemplates/{courseId} {

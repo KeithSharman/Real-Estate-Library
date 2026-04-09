@@ -11,6 +11,11 @@
 3. Deploy Firestore indexes:
 - firestore.indexes.json
 
+4. Optional one-click admin bootstrap from app:
+- In tenants/{tenantId}, set allowSelfAdminBootstrap = true
+- In the Home checklist panel, click Assign Current User As Admin
+- After first admin is assigned, set allowSelfAdminBootstrap = false
+
 If you use Firebase CLI, run:
 
 ```bash

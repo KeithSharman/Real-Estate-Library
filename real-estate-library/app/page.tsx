@@ -1,63 +1,131 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { auth, provider } from '../_utils/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { signInWithPopup, signOut } from 'firebase/auth';
-import { ensureCurrentUserProfile } from '../_services/course-service';
+import {
+  ensureCurrentUserProfile,
+  isCurrentUserTenantAdmin,
+  listPublishedCourseTemplates,
+  selfAssignCurrentUserAsTenantAdmin,
+} from '../_services/course-service';
+
+interface ChecklistState {
+  uid: string;
+  tenantId: string;
+  profileCreated: boolean;
+  isAdmin: boolean;
+  publishedTemplateCount: number;
+  error: string;
+}
 
 export default function Home() {
   const [user] = useAuthState(auth);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [profileBootstrapMessage, setProfileBootstrapMessage] = useState('');
+  const [checklistState, setChecklistState] = useState<ChecklistState | null>(null);
+  const [assigningAdmin, setAssigningAdmin] = useState(false);
+
+  const refreshChecklist = useCallback(async () => {
+    if (!user) {
+      setChecklistState(null);
+      return;
+    }
+
+    try {
+      const result = await ensureCurrentUserProfile();
+      const tenantId = result?.profile?.tenantId ?? '(missing)';
+
+      let isAdmin = false;
+      let publishedTemplateCount = 0;
+      const setupErrors: string[] = [];
+
+      try {
+        isAdmin = await isCurrentUserTenantAdmin();
+      } catch (adminCheckError) {
+        setupErrors.push(
+          adminCheckError instanceof Error
+            ? adminCheckError.message
+            : 'Unable to verify admin membership.'
+        );
+      }
+
+      try {
+        const templates = await listPublishedCourseTemplates();
+        publishedTemplateCount = templates.length;
+      } catch (templateError) {
+        setupErrors.push(
+          templateError instanceof Error
+            ? templateError.message
+            : 'Unable to read published templates.'
+        );
+      }
+
+      setChecklistState({
+        uid: result.uid,
+        tenantId,
+        profileCreated: result.created,
+        isAdmin,
+        publishedTemplateCount,
+        error: setupErrors.join(' | '),
+      });
+    } catch (bootstrapError) {
+      setChecklistState({
+        uid: user.uid,
+        tenantId: '(missing)',
+        profileCreated: false,
+        isAdmin: false,
+        publishedTemplateCount: 0,
+        error:
+          bootstrapError instanceof Error
+            ? bootstrapError.message
+            : 'Unable to confirm user profile.',
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function bootstrapProfile() {
-      if (!user) {
-        if (isMounted) {
-          setProfileBootstrapMessage('');
-        }
+    async function run() {
+      if (!isMounted) {
         return;
       }
 
-      try {
-        const result = await ensureCurrentUserProfile();
-
-        if (!isMounted) {
-          return;
-        }
-
-        const tenantId = result?.profile?.tenantId ?? '(missing)';
-        if (result.created) {
-          setProfileBootstrapMessage(
-            `First-run checklist: created users/${result.uid} with tenantId ${tenantId}.`
-          );
-        } else {
-          setProfileBootstrapMessage(
-            `First-run checklist: users/${result.uid} is ready with tenantId ${tenantId}.`
-          );
-        }
-      } catch (bootstrapError) {
-        if (!isMounted) {
-          return;
-        }
-        setProfileBootstrapMessage(
-          `First-run checklist: unable to confirm user profile (${bootstrapError instanceof Error ? bootstrapError.message : 'unknown error'}).`
-        );
-      }
+      await refreshChecklist();
     }
 
-    bootstrapProfile();
+    run();
 
     return () => {
       isMounted = false;
     };
-  }, [user]);
+  }, [refreshChecklist]);
+
+  const assignCurrentUserAsAdmin = async () => {
+    try {
+      setAssigningAdmin(true);
+      await selfAssignCurrentUserAsTenantAdmin();
+    } catch (assignError) {
+      setChecklistState((previous) => {
+        if (!previous) {
+          return previous;
+        }
+
+        const message = assignError instanceof Error ? assignError.message : 'Unable to self-assign admin role.';
+        return {
+          ...previous,
+          error: previous.error ? `${previous.error} | ${message}` : message,
+        };
+      });
+    } finally {
+      setAssigningAdmin(false);
+      await refreshChecklist();
+    }
+  };
 
   const courses = [
     {
@@ -139,9 +207,56 @@ export default function Home() {
       </header>
 
       <main className="mx-auto max-w-7xl px-6">
-        {user && profileBootstrapMessage && (
+        {user && checklistState && (
           <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-200">
-            {profileBootstrapMessage}
+            <p className="font-semibold">First-run checklist</p>
+            <p className="mt-2">Profile: {checklistState.profileCreated ? 'Created now' : 'Already exists'}</p>
+            <p>UID: {checklistState.uid}</p>
+            <p>Tenant: {checklistState.tenantId}</p>
+            <p>Admin role: {checklistState.isAdmin ? 'Assigned' : 'Missing'}</p>
+            <p>Published templates: {checklistState.publishedTemplateCount}</p>
+
+            {!checklistState.isAdmin && checklistState.tenantId !== '(missing)' && (
+              <div className="mt-2 space-y-2">
+                <p>
+                  To grant admin manually: create doc at tenants/{checklistState.tenantId}/admins/{checklistState.uid}.
+                </p>
+                <p>
+                  For one-click self-assign, set tenant field allowSelfAdminBootstrap = true in Firestore rules-enabled tenant doc.
+                </p>
+                <button
+                  type="button"
+                  onClick={assignCurrentUserAsAdmin}
+                  disabled={assigningAdmin}
+                  className="inline-flex rounded-full border border-emerald-300 px-3 py-1.5 font-medium hover:bg-emerald-100 disabled:opacity-60 dark:border-emerald-800 dark:hover:bg-emerald-950/40"
+                >
+                  {assigningAdmin ? 'Assigning...' : 'Assign Current User As Admin'}
+                </button>
+              </div>
+            )}
+
+            {checklistState.isAdmin && checklistState.publishedTemplateCount === 0 && (
+              <p className="mt-2">
+                No published templates found yet. Open Admin Tools and click Seed Demo Template.
+              </p>
+            )}
+
+            {checklistState.error && <p className="mt-2">Diagnostics: {checklistState.error}</p>}
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                href="/admin/courses"
+                className="inline-flex rounded-full border border-emerald-300 px-3 py-1.5 font-medium hover:bg-emerald-100 dark:border-emerald-800 dark:hover:bg-emerald-950/40"
+              >
+                Open Admin Tools
+              </Link>
+              <Link
+                href="/courses"
+                className="inline-flex rounded-full border border-emerald-300 px-3 py-1.5 font-medium hover:bg-emerald-100 dark:border-emerald-800 dark:hover:bg-emerald-950/40"
+              >
+                Open Courses
+              </Link>
+            </div>
           </div>
         )}
 
