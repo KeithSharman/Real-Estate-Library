@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState, use } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/_utils/firebase";
+import { getLatestQuizAttempt } from "@/_services/course-service";
 
-interface QuizResult {
+interface QuizAttempt {
+  id: string;
   score: number;
   passed: boolean;
-  answers: Record<number, number>;
-  timestamp: number;
-  autoPassed?: boolean;
 }
 
 export default function ResultsPage({
@@ -17,21 +18,57 @@ export default function ResultsPage({
   params: Promise<{ courseId: string }>;
 }) {
   const { courseId } = use(params);
-  const [result, setResult] = useState<QuizResult | null>(null);
+  const [user] = useAuthState(auth);
+  const [result, setResult] = useState<QuizAttempt | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedResult = localStorage.getItem(`quiz_${courseId}`);
-    if (storedResult) {
+    let isMounted = true;
+
+    async function loadResult() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const parsedResult = JSON.parse(storedResult);
-        setResult(parsedResult);
+        const attempt = await getLatestQuizAttempt(courseId);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setResult(attempt as QuizAttempt | null);
       } catch (error) {
-        console.error("Error parsing quiz results:", error);
+        console.error("Error loading quiz results:", error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
-    setLoading(false);
-  }, [courseId]);
+
+    loadResult();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [courseId, user]);
+
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
+        <div className="mx-auto max-w-3xl px-6 py-12">
+          <div className="rounded-3xl border border-zinc-200 bg-white p-8 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+            <h1 className="text-2xl font-semibold">Sign in required</h1>
+            <p className="mt-4 text-zinc-600 dark:text-zinc-400">
+              Please sign in to view quiz results.
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (loading) {
     return (
@@ -68,7 +105,8 @@ export default function ResultsPage({
     );
   }
 
-  const { score, passed, autoPassed } = result;
+  const { score, passed } = result;
+
   return (
     <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
       <div className="mx-auto max-w-3xl px-6 py-12">
@@ -89,19 +127,9 @@ export default function ResultsPage({
 
           <p className="mt-4 text-zinc-600 dark:text-zinc-400">
             {passed
-              ? autoPassed
-                ? "Demo course auto-passed successfully!"
-                : "Congratulations! You passed the course and can now return to your dashboard."
+              ? "Congratulations! You passed the course and can now return to your dashboard."
               : "A minimum score of 80% is required. Review the lessons and try again."}
           </p>
-
-          {autoPassed && (
-            <div className="mt-4 rounded-lg bg-blue-50 p-4 dark:bg-blue-950/20">
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                This demo course was auto-passed for demonstration purposes.
-              </p>
-            </div>
-          )}
 
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
             <Link

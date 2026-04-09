@@ -1,61 +1,152 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/_utils/firebase";
+import {
+  listPublishedCourseTemplates,
+  listUserEnrollmentsWithTemplates,
+} from "@/_services/course-service";
 import type {ReactNode} from "react";
 
-const inProgressCourses = [
-  {
-    id: "mls-listing-essentials-demo",
-    title: "MLS Listing Essentials [Demo]",
-    description: "Learn the full listing workflow from setup to publication.",
-    progress: 72,
-    lastAccessed: "Today",
-    nextLesson: "Publishing the final listing draft",
-  },
-  {
-    id: "transaction-document-workflow",
-    title: "Transaction Document Workflow",
-    description: "Practice document handling, review steps, and submission order.",
-    progress: 41,
-    lastAccessed: "Yesterday",
-    nextLesson: "Required signatures and approvals",
-  },
-  {
-    id: "client-intake-crm-setup",
-    title: "Client Intake & CRM Setup",
-    description: "Standardize lead capture, contact entry, and follow-up tasks.",
-    progress: 18,
-    lastAccessed: "2 days ago",
-    nextLesson: "Creating a new client record",
-  },
-];
+interface PublishedCourse {
+  id: string;
+  title?: string;
+}
 
-const completedCourses = [
-  {
-    title: "Real Estate Compliance Basics",
-    grade: "A",
-    completedOn: "May 12, 2026",
-    certificate: true,
-  },
-  {
-    title: "Office Tools & Internal Systems",
-    grade: "A-",
-    completedOn: "May 7, 2026",
-    certificate: true,
-  },
-  {
-    title: "Brokerage Communication Standards",
-    grade: "B+",
-    completedOn: "April 29, 2026",
-    certificate: false,
-  },
-];
+interface EnrollmentRow {
+  id: string;
+  courseId: string;
+  status?: string;
+  updatedAt?: unknown;
+  completedAt?: unknown;
+  progressPercent?: number;
+  quiz?: { score?: number | null };
+  course?: {
+    title?: string;
+    description?: string;
+  };
+}
 
-const recommendedCourses = [
-  { id: "property-showing-workflow", title: "Property Showing Workflow" },
-  { id: "offer-preparation-essentials", title: "Offer Preparation Essentials" },
-  { id: "lead-response-best-practices", title: "Lead Response Best Practices" },
-];
+function formatTimestamp(timestampValue: unknown) {
+  if (!timestampValue) {
+    return "-";
+  }
+
+  if (
+    typeof timestampValue === "object" &&
+    timestampValue !== null &&
+    "toDate" in timestampValue &&
+    typeof timestampValue.toDate === "function"
+  ) {
+    const tsDate = timestampValue.toDate();
+    return tsDate.toLocaleDateString();
+  }
+
+  if (
+    typeof timestampValue === "string" ||
+    typeof timestampValue === "number" ||
+    timestampValue instanceof Date
+  ) {
+    return new Date(timestampValue).toLocaleDateString();
+  }
+
+  return "-";
+}
 
 export default function DashboardPage() {
+  const [user] = useAuthState(auth);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [enrollments, setEnrollments] = useState<EnrollmentRow[]>([]);
+  const [publishedCourses, setPublishedCourses] = useState<PublishedCourse[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDashboard() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const [enrollmentData, publishedTemplates] = await Promise.all([
+          listUserEnrollmentsWithTemplates(),
+          listPublishedCourseTemplates(),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setEnrollments((enrollmentData.filter(Boolean) as EnrollmentRow[]) ?? []);
+        setPublishedCourses((publishedTemplates as PublishedCourse[]) ?? []);
+      } catch (loadError) {
+        if (!isMounted) {
+          return;
+        }
+        setError(loadError instanceof Error ? loadError.message : "Unable to load dashboard.");
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadDashboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
+
+  const inProgressCourses = useMemo(
+    () => enrollments.filter((item) => item.status === "in_progress"),
+    [enrollments]
+  );
+
+  const completedCourses = useMemo(
+    () => enrollments.filter((item) => item.status === "completed"),
+    [enrollments]
+  );
+
+  const recommendedCourses = useMemo(() => {
+    const enrolledIds = new Set(enrollments.map((item) => item.courseId));
+    return publishedCourses
+      .filter((course) => !enrolledIds.has(course.id))
+      .slice(0, 3)
+      .map((course) => ({
+        id: course.id,
+        title: course.title,
+      }));
+  }, [enrollments, publishedCourses]);
+
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
+        <div className="mx-auto max-w-7xl px-6 py-8 lg:px-10">
+          <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+            <h1 className="text-2xl font-semibold">Sign in required</h1>
+            <p className="mt-3 text-zinc-600 dark:text-zinc-400">
+              Dashboard data now uses Firestore enrollments and requires authentication.
+            </p>
+            <Link
+              href="/"
+              className="mt-5 inline-flex rounded-full bg-emerald-600 px-5 py-3 text-sm font-medium text-white hover:bg-emerald-500"
+            >
+              Go to sign in
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
       <div className="mx-auto max-w-7xl px-6 py-8 lg:px-10">
@@ -65,7 +156,7 @@ export default function DashboardPage() {
               Personal dashboard
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-              Welcome back, John Student
+              Welcome back, {user.displayName ?? "Student"}
             </h1>
             <p className="mt-2 text-zinc-600 dark:text-zinc-400">
               Continue your current courses, review grades, and start a new learning path.
@@ -97,38 +188,64 @@ export default function DashboardPage() {
             >
               View course catalog
             </Link>
+            <Link
+              href="/admin/courses"
+              className="inline-flex items-center justify-center rounded-full border border-zinc-300 px-5 py-3 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+            >
+              Admin tools
+            </Link>
           </div>
         </header>
 
+        {loading && (
+          <section className="mb-8 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+            Loading dashboard from Firestore...
+          </section>
+        )}
+
+        {!loading && error && (
+          <section className="mb-8 rounded-3xl border border-red-200 bg-red-50 p-6 text-red-700 shadow-sm dark:border-red-900 dark:bg-red-950/20 dark:text-red-200">
+            {error}
+          </section>
+        )}
+
         <section className="mb-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard title="In progress" value="3" note="Courses currently active" />
-          <StatCard title="Completed" value="12" note="Courses finished" />
-          <StatCard title="Average grade" value="A-" note="Across completed courses" />
-          <StatCard title="Learning streak" value="8 days" note="Keep it going today" />
+          <StatCard title="In progress" value={`${inProgressCourses.length}`} note="Courses currently active" />
+          <StatCard title="Completed" value={`${completedCourses.length}`} note="Courses finished" />
+          <StatCard title="Published" value={`${publishedCourses.length}`} note="Templates available" />
+          <StatCard title="Learning streak" value="-" note="Coming soon" />
         </section>
 
         <section className="grid gap-8 lg:grid-cols-[1.6fr_1fr]">
           <div className="space-y-8">
             <CardSection title="In progress courses" subtitle="Pick up where you left off">
               <div className="space-y-4">
+                {inProgressCourses.length === 0 && (
+                  <article className="rounded-2xl border border-zinc-200 p-5 dark:border-zinc-800">
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                      No in-progress courses. Start one from the catalog.
+                    </p>
+                  </article>
+                )}
+
                 {inProgressCourses.map((course) => (
                   <article
-                    key={course.title}
+                    key={course.id}
                     className="rounded-2xl border border-zinc-200 p-5 dark:border-zinc-800"
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="max-w-2xl">
                         <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-semibold">{course.title}</h3>
+                          <h3 className="text-lg font-semibold">{course.course?.title ?? course.courseId}</h3>
                           <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
                             Active
                           </span>
                         </div>
                         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                          {course.description}
+                          {course.course?.description ?? "Continue where you left off."}
                         </p>
                         <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-500">
-                          Last accessed: {course.lastAccessed}
+                          Last updated: {formatTimestamp(course.updatedAt)}
                         </p>
                       </div>
 
@@ -143,18 +260,18 @@ export default function DashboardPage() {
                     <div className="mt-4">
                       <div className="mb-2 flex justify-between text-sm text-zinc-600 dark:text-zinc-400">
                         <span>Progress</span>
-                        <span>{course.progress}%</span>
+                        <span>{course.progressPercent}%</span>
                       </div>
                       <div className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-800">
                         <div
                           className="h-2 rounded-full bg-emerald-500"
-                          style={{ width: `${course.progress}%` }}
+                          style={{ width: `${course.progressPercent}%` }}
                         />
                       </div>
                     </div>
 
                     <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-                      Next lesson: <span className="font-medium text-zinc-950 dark:text-zinc-50">{course.nextLesson}</span>
+                      Next lesson: <span className="font-medium text-zinc-950 dark:text-zinc-50">Continue from your current step</span>
                     </p>
                   </article>
                 ))}
@@ -163,20 +280,28 @@ export default function DashboardPage() {
 
             <CardSection title="Completed courses and grades" subtitle="Track your finished work">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {completedCourses.length === 0 && (
+                  <article className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 md:col-span-2 xl:col-span-3">
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                      No completed courses yet.
+                    </p>
+                  </article>
+                )}
+
                 {completedCourses.map((course) => (
                   <article
-                    key={course.title}
+                    key={course.id}
                     className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <h3 className="font-semibold">{course.title}</h3>
+                        <h3 className="font-semibold">{course.course?.title ?? course.courseId}</h3>
                         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                          Completed on {course.completedOn}
+                          Completed on {formatTimestamp(course.completedAt)}
                         </p>
                       </div>
                       <div className="rounded-2xl bg-zinc-950 px-3 py-2 text-lg font-semibold text-white dark:bg-zinc-50 dark:text-zinc-950">
-                        {course.grade}
+                        {course.quiz?.score ? `${course.quiz.score}%` : "Pass"}
                       </div>
                     </div>
 
@@ -185,21 +310,15 @@ export default function DashboardPage() {
                         Certificate
                       </span>
                       <span
-                        className={`font-medium ${
-                          course.certificate
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-zinc-500 dark:text-zinc-400"
-                        }`}
+                        className="font-medium text-emerald-600 dark:text-emerald-400"
                       >
-                        {course.certificate ? "Available" : "Not issued"}
+                        Available
                       </span>
                     </div>
 
-                    {course.certificate && (
-                      <button className="mt-4 w-full rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900">
-                        View certificate
-                      </button>
-                    )}
+                    <button className="mt-4 w-full rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900">
+                      View certificate
+                    </button>
                   </article>
                 ))}
               </div>
@@ -210,15 +329,15 @@ export default function DashboardPage() {
             <CardSection title="Profile" subtitle="Your account summary">
               <div className="flex items-center gap-4">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 text-xl font-semibold text-white">
-                  J
+                  {(user.displayName ?? user.email ?? "U").slice(0, 1).toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">Jordan Smith</h3>
+                  <h3 className="text-lg font-semibold">{user.displayName ?? "Student account"}</h3>
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">
                     Student account
                   </p>
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                    brokerage@company.com
+                    {user.email}
                   </p>
                 </div>
               </div>
@@ -262,9 +381,9 @@ export default function DashboardPage() {
 
             <CardSection title="Upcoming tasks" subtitle="What to do next">
               <div className="space-y-3 text-sm">
-                <TaskItem title="Finish Transaction Document Workflow" detail="Due in 3 days" />
-                <TaskItem title="Take the progress quiz" detail="2 lessons remaining" />
-                <TaskItem title="Review compliance module" detail="Certificate unlocks on completion" />
+                <TaskItem title="Continue your active enrollment" detail="Pick up at your current step" />
+                <TaskItem title="Complete all course steps" detail="Quiz unlocks when you are ready" />
+                <TaskItem title="Pass the final quiz" detail="Score 80% or higher" />
               </div>
             </CardSection>
           </aside>

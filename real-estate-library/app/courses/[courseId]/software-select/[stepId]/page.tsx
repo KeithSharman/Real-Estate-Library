@@ -1,120 +1,127 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState, use } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { useRouter } from "next/navigation";
+import { auth } from "@/_utils/firebase";
+import {
+  getCourseTemplate,
+  saveSelectedSoftwareForStep,
+} from "@/_services/course-service";
 
-const stepSoftwareOptions: Record<string, Array<{ id: string; name: string; description: string; category: string; isRecommended?: boolean; features?: string[] }>> = {
-  "task-selection": [
-    {
-      id: "general-overview",
-      name: "General Overview",
-      description: "Start with an overview of the complete workflow",
-      category: "Learning",
-      isRecommended: true,
-      features: ["Complete workflow overview", "Process mapping", "Best practices"],
-    },
-  ],
-  "crm-setup": [
-    {
-      id: "salesforce",
-      name: "Salesforce CRM",
-      description: "Practice client intake and communication management",
-      category: "CRM Platforms",
-      isRecommended: true,
-      features: ["Client database", "Communication tracking", "Lead management", "Task automation"],
-    },
-    {
-      id: "hubspot",
-      name: "HubSpot CRM",
-      description: "Alternative CRM platform for client management",
-      category: "CRM Platforms",
-      features: ["Contact management", "Email integration", "Deal tracking", "Marketing automation"],
-    },
-    {
-      id: "zoho",
-      name: "Zoho CRM",
-      description: "Cloud-based CRM solution",
-      category: "CRM Platforms",
-      features: ["Multi-channel support", "Analytics dashboard", "Mobile app", "API integrations"],
-    },
-    {
-      id: "propertybase",
-      name: "Propertybase",
-      description: "Real estate specific CRM platform",
-      category: "Real Estate CRM",
-      features: ["MLS integration", "Property tracking", "Commission management", "Transaction workflow"],
-    },
-  ],
-  "listing-entry": [
-    {
-      id: "mls-platform",
-      name: "MLS Platform",
-      description: "Learn property listing entry and management",
-      category: "MLS Systems",
-      isRecommended: true,
-      features: ["Property database", "Listing management", "IDX feeds", "Compliance tracking"],
-    },
-    {
-      id: "zillow",
-      name: "Zillow Mortgages",
-      description: "Alternative listing platform",
-      category: "Listing Platforms",
-      features: ["Lead generation", "Mortgage tools", "Property search", "Market data"],
-    },
-    {
-      id: "realtor-com",
-      name: "Realtor.com",
-      description: "Popular real estate listing site",
-      category: "Listing Platforms",
-      features: ["Property listings", "Agent directory", "Market reports", "Lead capture"],
-    },
-    {
-      id: "flexmls",
-      name: "Flex MLS",
-      description: "Advanced MLS platform with mobile tools",
-      category: "MLS Systems",
-      features: ["Mobile app", "Photo management", "Open house tools", "CMA reports"],
-    },
-  ],
-  "document-submission": [
-    {
-      id: "docusign",
-      name: "DocuSign",
-      description: "Complete document workflows and signing",
-      category: "E-Signature",
-      isRecommended: true,
-      features: ["Electronic signatures", "Document templates", "Workflow automation", "Compliance tracking"],
-    },
-    {
-      id: "adobe-sign",
-      name: "Adobe Sign",
-      description: "Alternative e-signature platform",
-      category: "E-Signature",
-      features: ["PDF integration", "Advanced security", "Bulk sending", "API access"],
-    },
-    {
-      id: "hellosign",
-      name: "HelloSign",
-      description: "Simple document signing solution",
-      category: "E-Signature",
-      features: ["Easy setup", "Team management", "Audit trails", "Mobile signing"],
-    },
-    {
-      id: "dotloop",
-      name: "DotLoop",
-      description: "Real estate specific transaction management",
-      category: "Transaction Management",
-      features: ["Document management", "Task tracking", "Client communication", "Commission tracking"],
-    },
-  ],
-};
+interface SoftwareOption {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  isRecommended?: boolean;
+  features?: string[];
+}
 
-export default async function SoftwareSelectPage({
+interface TemplateStep {
+  id: string;
+  softwareOptions?: SoftwareOption[];
+}
+
+interface CourseTemplate {
+  steps?: TemplateStep[];
+}
+
+export default function SoftwareSelectPage({
   params,
 }: {
   params: Promise<{ courseId: string; stepId: string }>;
 }) {
-  const { courseId, stepId } = await params;
-  const softwareOptions = stepSoftwareOptions[stepId];
+  const { courseId, stepId } = use(params);
+  const router = useRouter();
+  const [user] = useAuthState(auth);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [step, setStep] = useState<TemplateStep | null>(null);
+  const [savingId, setSavingId] = useState("");
 
-  if (!softwareOptions) {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadStep() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const template = (await getCourseTemplate(courseId)) as CourseTemplate | null;
+        const templateStep = template?.steps?.find((item) => item.id === stepId);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setStep(templateStep ?? null);
+      } catch (loadError) {
+        if (!isMounted) {
+          return;
+        }
+        setError(loadError instanceof Error ? loadError.message : "Unable to load software options.");
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadStep();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [courseId, stepId, user]);
+
+  const softwareOptions = step?.softwareOptions ?? [];
+
+  async function handleStart(softwareId: string) {
+    try {
+      setSavingId(softwareId);
+      await saveSelectedSoftwareForStep(courseId, stepId, softwareId);
+      router.push(`/courses/${courseId}/${stepId}`);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Unable to save software selection.");
+    } finally {
+      setSavingId("");
+    }
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
+        <div className="mx-auto max-w-3xl px-6 py-8">
+          <div className="rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+            <h1 className="text-2xl font-semibold">Sign in required</h1>
+            <p className="mt-4 text-zinc-600 dark:text-zinc-400">
+              Please sign in to continue this course step.
+            </p>
+            <Link href="/" className="mt-6 inline-flex rounded-full bg-emerald-600 px-5 py-3 text-sm font-medium text-white hover:bg-emerald-500">
+              Go to sign in
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
+        <div className="mx-auto max-w-4xl px-6 py-8">Loading software options...</div>
+      </main>
+    );
+  }
+
+  if (!step || softwareOptions.length === 0) {
     return (
       <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
         <div className="mx-auto max-w-3xl px-6 py-8">
@@ -171,8 +178,14 @@ export default async function SoftwareSelectPage({
             Select your software
           </h1>
 
+          {error && (
+            <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/20 dark:text-red-200">
+              {error}
+            </p>
+          )}
+
           <p className="mt-4 text-zinc-600 dark:text-zinc-400">
-            Choose the software platform you'll be using for this step. Select the one your brokerage uses or try a recommended option.
+            Choose the software platform you&apos;ll be using for this step. Select the one your brokerage uses or try a recommended option.
           </p>
 
           <div className="mt-8 space-y-4">
@@ -214,23 +227,25 @@ export default async function SoftwareSelectPage({
                       </div>
                     )}
                   </div>
-                  <Link
-                    href={`/courses/${courseId}/${stepId}`}
+                  <button
+                    type="button"
+                    onClick={() => handleStart(software.id)}
+                    disabled={Boolean(savingId)}
                     className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-medium text-white transition whitespace-nowrap ${
                       software.isRecommended
                         ? 'bg-emerald-600 hover:bg-emerald-500'
                         : 'bg-zinc-600 hover:bg-zinc-500'
                     }`}
                   >
-                    Start with {software.name}
-                  </Link>
+                    {savingId === software.id ? "Saving..." : `Start with ${software.name}`}
+                  </button>
                 </div>
               </div>
             ))}
           </div>
 
           <div className="mt-8 rounded-2xl bg-zinc-50 p-6 dark:bg-zinc-900">
-            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">Don't see your software?</h3>
+            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">Don&apos;t see your software?</h3>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
               The concepts taught in this course apply to most real estate software platforms. Choose the recommended option to get started.
             </p>

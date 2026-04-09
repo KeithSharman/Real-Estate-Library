@@ -1,11 +1,15 @@
 'use client';
 
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { auth, provider } from '../_utils/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { signInWithPopup, signOut } from 'firebase/auth';
 
 export default function Home() {
   const [user] = useAuthState(auth);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const courses = [
     {
@@ -29,6 +33,12 @@ export default function Home() {
   const signin = async () => {
     try {
       await signInWithPopup(auth, provider);
+      const redirectTo = searchParams.get('redirect');
+      if (redirectTo && redirectTo.startsWith('/')) {
+        router.push(redirectTo);
+      } else {
+        router.push('/dashboard');
+      }
     } catch (error) {
       alert(error);
     }
@@ -43,16 +53,16 @@ export default function Home() {
       <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-black/70">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="font-semibold tracking-tight">
-            <a href="/">Real Estate Library</a>
+            <Link href="/">Real Estate Library</Link>
           </div>
 
           <div className="flex items-center gap-3">
-            <a
+            <Link
               href="/dashboard"
               className="text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
             >
               Dashboard
-            </a>
+            </Link>
 
             <a
               href="#courses"

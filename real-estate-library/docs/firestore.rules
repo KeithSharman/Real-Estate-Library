@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profileDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function hasProfile() {
+      return signedIn() && profileDoc(request.auth.uid).exists();
+    }
+
+    function userTenantId() {
+      return hasProfile() ? profileDoc(request.auth.uid).data.tenantId : null;
+    }
+
+    function isTenantMember(tenantId) {
+      return hasProfile() && userTenantId() == tenantId;
+    }
+
+    function isTenantAdmin(tenantId) {
+      return signedIn() && exists(/databases/$(database)/documents/tenants/$(tenantId)/admins/$(request.auth.uid));
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid;
+      allow update: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.tenantId == resource.data.tenantId;
+      allow delete: if false;
+    }
+
+    match /tenants/{tenantId} {
+      allow read: if isTenantMember(tenantId);
+      allow write: if false;
+
+      match /admins/{adminUid} {
+        allow read: if isTenantMember(tenantId);
+        allow write: if false;
+      }
+
+      match /courseTemplates/{courseId} {
+        allow read: if (isTenantMember(tenantId) && resource.data.status == "published") || isTenantAdmin(tenantId);
+        allow create, update, delete: if isTenantAdmin(tenantId)
+          && request.resource.data.tenantId == tenantId;
+      }
+
+      match /enrollments/{enrollmentId} {
+        allow read: if isTenantMember(tenantId)
+          && resource.data.userId == request.auth.uid;
+
+        allow create: if isTenantMember(tenantId)
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.tenantId == tenantId
+          && request.resource.data.courseId is string;
+
+        allow update: if isTenantMember(tenantId)
+          && resource.data.userId == request.auth.uid
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.tenantId == resource.data.tenantId
+          && request.resource.data.courseId == resource.data.courseId;
+
+        allow delete: if isTenantAdmin(tenantId);
+      }
+
+      match /quizAttempts/{attemptId} {
+        allow read: if isTenantMember(tenantId)
+          && resource.data.userId == request.auth.uid;
+
+        allow create: if isTenantMember(tenantId)
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.tenantId == tenantId
+          && request.resource.data.courseId is string
+          && request.resource.data.score is number
+          && request.resource.data.passed is bool;
+
+        allow update, delete: if false;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

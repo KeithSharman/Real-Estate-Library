@@ -1,90 +1,100 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/_utils/firebase";
+import { listPublishedCourseTemplates } from "@/_services/course-service";
 
-const courses = [
-  {
-    id: "mls-listing-essentials-demo",
-    title: "MLS Listing Essentials [Demo]",
-    category: "Listings",
-    level: "Beginner",
-    duration: "2.5 hours",
-    description:
-      "Demo course showing a complete listing workflow. Works without backend integration - use this to test the course functionality.",
-    featured: true,
-    skills: ["MLS Platform", "Property Marketing", "Compliance"],
-  },
-  {
-    id: "mls-listing-essentials",
-    title: "MLS Listing Essentials",
-    category: "Listings",
-    level: "Beginner",
-    duration: "2.5 hours",
-    description:
-      "Learn the full process of creating, reviewing, and publishing a property listing correctly.",
-    skills: ["MLS Platform", "Property Marketing", "Compliance"],
-  },
-  {
-    id: "transaction-document-workflow",
-    title: "Transaction Document Workflow",
-    category: "Compliance",
-    level: "Intermediate",
-    duration: "3 hours",
-    description:
-      "Understand the sequence for preparing, signing, and submitting real estate documents.",
-    skills: ["Document Management", "Legal Compliance", "Transaction Processing"],
-  },
-  {
-    id: "client-intake-crm-setup",
-    title: "Client Intake & CRM Setup",
-    category: "Sales",
-    level: "Beginner",
-    duration: "1.5 hours",
-    description:
-      "Standardize how new client information is entered and managed in your CRM.",
-    skills: ["CRM Management", "Client Relations", "Lead Conversion"],
-  },
-  {
-    id: "brokerage-software-stack",
-    title: "Brokerage Software Stack",
-    category: "Systems",
-    level: "Intermediate",
-    duration: "2 hours",
-    description:
-      "Train employees on the software tools your brokerage uses every day.",
-    skills: ["Software Training", "Workflow Optimization", "Team Productivity"],
-  },
-  {
-    id: "offer-preparation-essentials",
-    title: "Offer Preparation Essentials",
-    category: "Offers",
-    level: "Advanced",
-    duration: "3.5 hours",
-    description:
-      "Walk through the steps involved in creating and submitting an offer package.",
-    skills: ["Offer Writing", "Negotiation", "Contract Law"],
-  },
-  {
-    id: "property-showing-workflow",
-    title: "Property Showing Workflow",
-    category: "Operations",
-    level: "Beginner",
-    duration: "1 hour",
-    description:
-      "Build consistent habits for scheduling, preparing for, and following up on showings.",
-    skills: ["Customer Service", "Property Presentation", "Follow-up Process"],
-  },
-];
-
-const categories = [
-  "All courses",
-  "Listings",
-  "Compliance",
-  "Sales",
-  "Systems",
-  "Offers",
-  "Operations",
-];
+interface CourseTemplate {
+  id: string;
+  title?: string;
+  description?: string;
+  category?: string;
+  level?: string;
+  duration?: string;
+}
 
 export default function CoursesPage() {
+  const [user] = useAuthState(auth);
+  const [courses, setCourses] = useState<CourseTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All courses");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCourses() {
+      if (!user) {
+        setCourses([]);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const templates = await listPublishedCourseTemplates();
+
+        if (!isMounted) {
+          return;
+        }
+
+        setCourses(templates as CourseTemplate[]);
+      } catch (loadError) {
+        if (!isMounted) {
+          return;
+        }
+
+        setError(loadError instanceof Error ? loadError.message : "Unable to load courses.");
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadCourses();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
+
+  const categories = useMemo(() => {
+    const categorySet = new Set(["All courses"]);
+    courses.forEach((course) => {
+      if (course.category) {
+        categorySet.add(course.category);
+      }
+    });
+    return Array.from(categorySet);
+  }, [courses]);
+
+  const filteredCourses = useMemo(() => {
+    return courses.filter((course) => {
+      const inCategory =
+        selectedCategory === "All courses" || course.category === selectedCategory;
+
+      if (!inCategory) {
+        return false;
+      }
+
+      if (!searchValue.trim()) {
+        return true;
+      }
+
+      const lowerSearch = searchValue.toLowerCase();
+      return [course.title, course.description, course.category, course.level]
+        .join(" ")
+        .toLowerCase()
+        .includes(lowerSearch);
+    });
+  }, [courses, searchValue, selectedCategory]);
+
   return (
     <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
       <div className="mx-auto max-w-7xl px-6 py-8 lg:px-10">
@@ -152,6 +162,8 @@ export default function CoursesPage() {
                   <input
                     id="search"
                     type="text"
+                    value={searchValue}
+                    onChange={(event) => setSearchValue(event.target.value)}
                     placeholder="Search by course title, category, or keyword"
                     className="w-full rounded-full border border-zinc-300 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-950 dark:focus:border-emerald-500"
                   />
@@ -161,6 +173,8 @@ export default function CoursesPage() {
                   {categories.map((category) => (
                     <button
                       key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      type="button"
                       className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
                     >
                       {category}
@@ -171,9 +185,42 @@ export default function CoursesPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-              {courses.map((course) => (
+              {!user && (
+                <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 md:col-span-2">
+                  <h2 className="text-xl font-semibold">Sign in required</h2>
+                  <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+                    Course templates are now loaded from Firestore and require authentication.
+                  </p>
+                  <Link
+                    href="/"
+                    className="mt-5 inline-flex rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-500"
+                  >
+                    Go to sign in
+                  </Link>
+                </article>
+              )}
+
+              {loading && (
+                <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 md:col-span-2">
+                  Loading courses from Firestore...
+                </article>
+              )}
+
+              {!loading && error && (
+                <article className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-700 shadow-sm dark:border-red-900 dark:bg-red-950/20 dark:text-red-200 md:col-span-2">
+                  {error}
+                </article>
+              )}
+
+              {!loading && !error && user && filteredCourses.length === 0 && (
+                <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 md:col-span-2">
+                  No courses matched your search.
+                </article>
+              )}
+
+              {!loading && !error && user && filteredCourses.map((course) => (
                 <article
-                  key={course.title}
+                  key={course.id}
                   className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950"
                 >
                   <div className="flex items-center justify-between gap-4">
@@ -186,15 +233,15 @@ export default function CoursesPage() {
                   </div>
 
                   <h2 className="mt-4 text-xl font-semibold tracking-tight">
-                    {course.title}
+                    {course.title ?? "Untitled course"}
                   </h2>
 
                   <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                    {course.description}
+                    {course.description ?? "No description provided."}
                   </p>
 
                   <div className="mt-5 flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400">
-                    <span>{course.duration}</span>
+                    <span>{course.duration ?? "Self-paced"}</span>
                     <span>Certificate eligible</span>
                   </div>
 
@@ -203,7 +250,7 @@ export default function CoursesPage() {
                       href={`/courses/${course.id}`}
                       className="flex-1 rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-500"
                     >
-                      Enroll
+                      Start
                     </Link>
                     <Link
                       href={`/courses/${course.id}`}

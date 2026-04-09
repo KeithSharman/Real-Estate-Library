@@ -1,68 +1,141 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState, use } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/_utils/firebase";
+import {
+  getCourseTemplate,
+  getEnrollmentForCourse,
+} from "@/_services/course-service";
+
+interface SoftwareOption {
+  id: string;
+  name: string;
+}
 
 interface CourseStep {
   id: string;
   title: string;
   description: string;
-  software: string;
+  softwareOptions?: SoftwareOption[];
 }
 
-interface Course {
+interface CourseTemplate {
+  id: string;
   title: string;
   description: string;
-  progress: number;
-  steps: CourseStep[];
+  steps?: CourseStep[];
 }
 
-const coursesData: Record<string, Course> = {
-  "mls-listing-essentials-demo": {
-    title: "MLS Listing Essentials [Demo]",
-    description:
-      "Learn the complete process for creating, reviewing, and publishing a real estate listing. This demo version works without a backend.",
-    progress: 0,
-    steps: [
-      {
-        id: "task-selection",
-        title: "Select task to learn",
-        description: "Choose which real estate workflow you want to complete.",
-        software: "General Overview",
-      },
-      {
-        id: "crm-setup",
-        title: "Client Intake in CRM",
-        description: "Learn how to add a client and prepare their information.",
-        software: "Salesforce CRM",
-      },
-      {
-        id: "listing-entry",
-        title: "Create Property Listing",
-        description: "Enter listing details into the MLS system.",
-        software: "MLS Platform",
-      },
-      {
-        id: "document-submission",
-        title: "Submit Required Documents",
-        description: "Finalize and send forms to the correct destination.",
-        software: "DocuSign",
-      },
-    ],
-  },
-};
+interface EnrollmentState {
+  id: string;
+  progressPercent: number;
+  stepProgress?: Record<string, { selectedSoftwareId?: string }>;
+}
 
-export default async function CoursePage({
+export default function CoursePage({
   params,
 }: {
   params: Promise<{ courseId: string }>;
 }) {
-  const { courseId } = await params;
-  
-  // Always allow demo course to work
-  let finalCourse: Course | undefined = coursesData[courseId];
-  if (!finalCourse && (courseId === "mls-listing-essentials-demo" || courseId.includes("demo"))) {
-    finalCourse = coursesData["mls-listing-essentials-demo"];
+  const { courseId } = use(params);
+  const [user] = useAuthState(auth);
+  const [course, setCourse] = useState<CourseTemplate | null>(null);
+  const [enrollment, setEnrollment] = useState<EnrollmentState | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCourse() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const template = await getCourseTemplate(courseId);
+
+        if (!template) {
+          if (isMounted) {
+            setCourse(null);
+          }
+          return;
+        }
+
+        const progress = await getEnrollmentForCourse(courseId, {
+          createIfMissing: true,
+        });
+
+        if (!isMounted) {
+          return;
+        }
+
+        setCourse(template as CourseTemplate);
+        setEnrollment(progress as EnrollmentState | null);
+      } catch (loadError) {
+        if (!isMounted) {
+          return;
+        }
+
+        setError(loadError instanceof Error ? loadError.message : "Unable to load course.");
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadCourse();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [courseId, user]);
+
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
+        <div className="mx-auto max-w-6xl px-6 py-8">
+          <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+            <h1 className="text-2xl font-semibold">Sign in required</h1>
+            <p className="mt-4 text-zinc-600 dark:text-zinc-400">
+              Course content is now loaded from Firestore and requires authentication.
+            </p>
+            <Link
+              href="/"
+              className="mt-6 inline-flex rounded-full bg-emerald-600 px-5 py-3 text-sm font-medium text-white hover:bg-emerald-500"
+            >
+              Go to sign in
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
   }
 
-  if (!finalCourse) {
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
+        <div className="mx-auto max-w-6xl px-6 py-8">Loading course...</div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
+        <div className="mx-auto max-w-6xl px-6 py-8 text-red-600">{error}</div>
+      </main>
+    );
+  }
+
+  if (!course) {
     return (
       <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
         <div className="mx-auto max-w-6xl px-6 py-8">
@@ -75,27 +148,15 @@ export default async function CoursePage({
           <div className="mt-8 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
             <h1 className="text-3xl font-semibold tracking-tight">Course not found</h1>
             <p className="mt-4 text-zinc-600 dark:text-zinc-400">
-              This course is not available yet. Currently only the "MLS Listing Essentials [Demo]" course is available without a backend.
+              This course is not available for your tenant or is not published.
             </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/courses/mls-listing-essentials-demo/task-selection"
-                className="inline-block rounded-full bg-emerald-600 px-5 py-3 text-sm font-medium text-white hover:bg-emerald-500"
-              >
-                Try the demo course
-              </Link>
-              <Link
-                href="/courses"
-                className="inline-block rounded-full border border-zinc-300 px-5 py-3 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
-              >
-                View all courses
-              </Link>
-            </div>
           </div>
         </div>
       </main>
     );
   }
+
+  const progress = enrollment?.progressPercent ?? 0;
 
   return (
     <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
@@ -116,7 +177,7 @@ export default async function CoursePage({
             </li>
             <li className="text-zinc-400">/</li>
             <li className="text-zinc-900 dark:text-zinc-100 font-medium">
-              {finalCourse.title}
+              {course.title}
             </li>
           </ol>
         </nav>
@@ -131,11 +192,11 @@ export default async function CoursePage({
             </Link>
 
             <h1 className="mt-3 text-4xl font-semibold tracking-tight">
-              {finalCourse.title}
+              {course.title}
             </h1>
 
             <p className="mt-4 max-w-3xl text-zinc-600 dark:text-zinc-400">
-              {finalCourse.description}
+              {course.description}
             </p>
           </div>
 
@@ -143,11 +204,11 @@ export default async function CoursePage({
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               Course progress
             </p>
-            <p className="mt-2 text-3xl font-semibold">{finalCourse.progress}%</p>
+            <p className="mt-2 text-3xl font-semibold">{progress}%</p>
             <div className="mt-3 h-2 rounded-full bg-zinc-200 dark:bg-zinc-800">
               <div
                 className="h-2 rounded-full bg-emerald-500"
-                style={{ width: `${finalCourse.progress}%` }}
+                style={{ width: `${progress}%` }}
               />
             </div>
           </div>
@@ -164,7 +225,13 @@ export default async function CoursePage({
           </div>
 
           <div className="space-y-4">
-            {finalCourse.steps.map((step, index) => (
+            {(course.steps ?? []).map((step, index) => {
+              const selectedSoftwareId = enrollment?.stepProgress?.[step.id]?.selectedSoftwareId;
+              const selectedSoftware = (step.softwareOptions ?? []).find(
+                (option) => option.id === selectedSoftwareId
+              );
+
+              return (
               <div
                 key={step.id}
                 className="flex flex-col gap-4 rounded-2xl border border-zinc-200 p-5 dark:border-zinc-800 lg:flex-row lg:items-center lg:justify-between"
@@ -180,7 +247,7 @@ export default async function CoursePage({
                       {step.description}
                     </p>
                     <p className="mt-2 text-sm font-medium text-emerald-600">
-                      Software: {step.software}
+                      Software: {selectedSoftware?.name ?? "Choose on next screen"}
                     </p>
                   </div>
                 </div>
@@ -192,7 +259,8 @@ export default async function CoursePage({
                   Open step
                 </Link>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
