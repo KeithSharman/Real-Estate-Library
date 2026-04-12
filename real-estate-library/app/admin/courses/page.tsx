@@ -212,16 +212,37 @@ export default function AdminCoursesPage() {
         <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
           <h2 className="text-xl font-semibold">Create or Update Template Metadata</h2>
           <form className="mt-4 grid gap-3 md:grid-cols-2" onSubmit={handleSaveTemplate}>
-            <input value={form.id} onChange={(e) => setForm((s) => ({ ...s, id: e.target.value }))} placeholder="Template ID (optional for create)" className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950" />
-            <input required value={form.title} onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))} placeholder="Title" className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950" />
-            <input value={form.category} onChange={(e) => setForm((s) => ({ ...s, category: e.target.value }))} placeholder="Category" className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950" />
-            <input value={form.level} onChange={(e) => setForm((s) => ({ ...s, level: e.target.value }))} placeholder="Level" className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950" />
-            <input value={form.duration} onChange={(e) => setForm((s) => ({ ...s, duration: e.target.value }))} placeholder="Duration (e.g. 2 hours)" className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950" />
-            <select value={form.status} onChange={(e) => setForm((s) => ({ ...s, status: e.target.value }))} className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950">
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-            </select>
-            <textarea value={form.description} onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))} placeholder="Description" className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950 md:col-span-2" rows={3} />
+            <div className="flex flex-col gap-1">
+              <label htmlFor="template-id" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Template ID <span className="text-zinc-400">(optional for create)</span></label>
+              <input id="template-id" name="template-id" value={form.id} onChange={(e) => setForm((s) => ({ ...s, id: e.target.value }))} placeholder="e.g. mls-listing-essentials" className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="template-title" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Title <span className="text-red-500">*</span></label>
+              <input id="template-title" name="template-title" required value={form.title} onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))} placeholder="e.g. MLS Listing Essentials" className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="template-category" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Category</label>
+              <input id="template-category" name="template-category" value={form.category} onChange={(e) => setForm((s) => ({ ...s, category: e.target.value }))} placeholder="e.g. Listings" className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="template-level" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Level</label>
+              <input id="template-level" name="template-level" value={form.level} onChange={(e) => setForm((s) => ({ ...s, level: e.target.value }))} placeholder="e.g. Beginner" className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="template-duration" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Duration</label>
+              <input id="template-duration" name="template-duration" value={form.duration} onChange={(e) => setForm((s) => ({ ...s, duration: e.target.value }))} placeholder="e.g. 2 hours" className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="template-status" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Status</label>
+              <select id="template-status" name="template-status" value={form.status} onChange={(e) => setForm((s) => ({ ...s, status: e.target.value }))} className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950">
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label htmlFor="template-description" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Description</label>
+              <textarea id="template-description" name="template-description" value={form.description} onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))} placeholder="Describe what learners will accomplish in this course" className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950" rows={3} />
+            </div>
             <button type="submit" disabled={saving} className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60 dark:bg-zinc-50 dark:text-zinc-950 md:col-span-2">
               {saving ? "Saving..." : "Save Template Metadata"}
             </button>

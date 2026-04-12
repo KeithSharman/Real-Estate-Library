@@ -1,0 +1,10 @@
+{
+  "name": "real-estate-library-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix real-estate-library run dev",
+    "build": "npm --prefix real-estate-library run build",
+    "start": "npm --prefix real-estate-library run start",
+    "lint": "npm --prefix real-estate-library run lint"
+  }
+}

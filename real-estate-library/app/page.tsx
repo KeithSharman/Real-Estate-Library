@@ -45,9 +45,7 @@ function HomeContent() {
 
       try {
         isAdmin = await isCurrentUserTenantAdmin();
-        console.log(`[refreshChecklist] Admin check completed, isAdmin=${isAdmin}`);
       } catch (adminCheckError) {
-        console.error(`[refreshChecklist] Admin check failed:`, adminCheckError);
         setupErrors.push(
           adminCheckError instanceof Error
             ? adminCheckError.message

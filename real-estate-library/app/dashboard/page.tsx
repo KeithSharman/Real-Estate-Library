@@ -250,7 +250,7 @@ export default function DashboardPage() {
                       </div>
 
                       <Link
-                        href={`/courses/${course.id}`}
+                        href={`/courses/${course.courseId}`}
                         className="inline-flex h-fit items-center justify-center rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
                       >
                         Continue
@@ -316,9 +316,21 @@ export default function DashboardPage() {
                       </span>
                     </div>
 
-                    <button className="mt-4 w-full rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900">
-                      View certificate
-                    </button>
+                    <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+                      Review the material anytime. Your course completion stays intact, and only a higher quiz retake will improve your saved score.
+                    </p>
+
+                    <div className="mt-4 flex flex-col gap-3">
+                      <Link
+                        href={`/courses/${course.courseId}`}
+                        className="inline-flex w-full items-center justify-center rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+                      >
+                        Review course
+                      </Link>
+                      <button className="w-full rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900">
+                        View certificate
+                      </button>
+                    </div>
                   </article>
                 ))}
               </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import YouTubeEmbed from "@/app/components/youtube-embed";
 
 export default async function CrmSetupStep({
   params,
@@ -6,6 +7,7 @@ export default async function CrmSetupStep({
   params: Promise<{ courseId: string }>;
 }) {
   const { courseId } = await params;
+  const placeholderVideoUrl = "https://www.youtube.com/watch?v=ysz5S6PUM-U";
 
   return (
     <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
@@ -36,8 +38,11 @@ export default async function CrmSetupStep({
           </p>
 
           <div className="mt-8 overflow-hidden rounded-3xl border border-zinc-200 dark:border-zinc-800">
-            <div className="flex aspect-video items-center justify-center bg-zinc-200 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
-              Placeholder for embedded YouTube training video
+            <div className="aspect-video">
+              <YouTubeEmbed
+                videoUrl={placeholderVideoUrl}
+                title="Client intake in CRM training video"
+              />
             </div>
           </div>
 

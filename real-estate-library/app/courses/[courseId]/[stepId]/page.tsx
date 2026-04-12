@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, use } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter } from "next/navigation";
 import { auth } from "@/_utils/firebase";
+import YouTubeEmbed from "@/app/components/youtube-embed";
 import {
   completeStepAndAdvance,
   getCourseTemplate,
@@ -192,14 +193,8 @@ export default function CourseStepPage({
           </p>
 
           <div className="mt-8 overflow-hidden rounded-3xl border border-zinc-200 dark:border-zinc-800">
-            <div className="flex aspect-video items-center justify-center bg-zinc-200 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
-              {step.videoUrl ? (
-                <a href={step.videoUrl} target="_blank" rel="noreferrer" className="underline">
-                  Open training video
-                </a>
-              ) : (
-                "No video configured for this step"
-              )}
+            <div className="aspect-video">
+              <YouTubeEmbed videoUrl={step.videoUrl} title={`${step.title} training video`} />
             </div>
           </div>
 

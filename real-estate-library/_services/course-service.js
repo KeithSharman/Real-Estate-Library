@@ -45,7 +45,7 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 			title: "Select task to learn",
 			description:
 				"Choose which real estate workflow you want to complete and understand the basic steps involved.",
-			videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+			videoUrl: "https://www.youtube.com/watch?v=M7lc1UVf-VE",
 			instructions: [
 				"Review the workflow goals for this module.",
 				"Identify the systems your brokerage currently uses.",
@@ -80,7 +80,7 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 			title: "Client Intake in CRM",
 			description:
 				"Learn how to add a client and prepare their information for follow-up and transaction management.",
-			videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+			videoUrl: "https://www.youtube.com/watch?v=ysz5S6PUM-U",
 			instructions: [
 				"Create a new lead/contact record.",
 				"Enter client profile and property requirements.",
@@ -152,7 +152,7 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 			title: "Create Property Listing",
 			description:
 				"Learn how to enter listing details into the MLS system, upload property photos, and verify that all required fields are completed correctly.",
-			videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+			videoUrl: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
 			instructions: [
 				"Create a draft listing and fill all mandatory fields.",
 				"Upload and order photos for best presentation.",
@@ -219,7 +219,7 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 			title: "Submit Required Documents",
 			description:
 				"Complete the workflow by finalizing documents, collecting signatures, and submitting to the correct destination.",
-			videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+			videoUrl: "https://www.youtube.com/watch?v=ScMzIvxBSi4",
 			instructions: [
 				"Package required forms for review.",
 				"Collect signatures and confirm form completeness.",
@@ -327,19 +327,32 @@ function getEnrollmentDocumentId(userId, courseId) {
 	return `${userId}_${courseId}`;
 }
 
+function isFirestoreErrorCode(error, code) {
+	return typeof error === "object" && error !== null && "code" in error && error.code === code;
+}
+
 function buildTenantCollectionPath(tenantId, collectionName) {
 	return collection(db, TENANTS_COLLECTION, tenantId, collectionName);
 }
 
 function calculateProgressPercent(template, enrollment) {
 	const steps = template?.steps ?? [];
+	const hasQuiz = Boolean(template?.quiz?.questions?.length);
+	const totalUnits = steps.length + (hasQuiz ? 1 : 0);
 
-	if (steps.length === 0) {
+	if (totalUnits === 0) {
 		return 0;
 	}
 
-	const completed = steps.filter((step) => Boolean(enrollment?.stepProgress?.[step.id]?.completedAt)).length;
-	return Math.round((completed / steps.length) * 100);
+	if (enrollment?.status === "completed" || enrollment?.completedAt) {
+		return 100;
+	}
+
+	const completedSteps = steps.filter((step) => Boolean(enrollment?.stepProgress?.[step.id]?.completedAt)).length;
+	const completedQuiz = hasQuiz && Boolean(enrollment?.quiz?.lastAttemptAt) ? 1 : 0;
+	const completedUnits = completedSteps + completedQuiz;
+
+	return Math.min(100, Math.round((completedUnits / totalUnits) * 100));
 }
 
 function normalizeSteps(steps = []) {
@@ -518,31 +531,37 @@ export async function getOrCreateEnrollment(courseId) {
 
 	const firstStep = template.steps?.[0] ?? null;
 
-	await runTransaction(db, async (transaction) => {
-		const existing = await transaction.get(enrollmentRef);
+	try {
+		await runTransaction(db, async (transaction) => {
+			const existing = await transaction.get(enrollmentRef);
 
-		if (existing.exists()) {
-			return;
-		}
+			if (existing.exists()) {
+				return;
+			}
 
-		transaction.set(enrollmentRef, {
-			tenantId: context.tenantId,
-			userId: context.uid,
-			courseId,
-			status: "in_progress",
-			currentStepId: firstStep?.id ?? null,
-			currentStepOrder: firstStep?.order ?? 1,
-			stepProgress: {},
-			quiz: {
-				passed: false,
-				score: null,
-				lastAttemptAt: null,
-			},
-			startedAt: serverTimestamp(),
-			updatedAt: serverTimestamp(),
-			completedAt: null,
+			transaction.set(enrollmentRef, {
+				tenantId: context.tenantId,
+				userId: context.uid,
+				courseId,
+				status: "in_progress",
+				currentStepId: firstStep?.id ?? null,
+				currentStepOrder: firstStep?.order ?? 1,
+				stepProgress: {},
+				quiz: {
+					passed: false,
+					score: null,
+					lastAttemptAt: null,
+				},
+				startedAt: serverTimestamp(),
+				updatedAt: serverTimestamp(),
+				completedAt: null,
+			});
 		});
-	});
+	} catch (error) {
+		if (!isFirestoreErrorCode(error, "already-exists")) {
+			throw error;
+		}
+	}
 
 	const created = await getDoc(enrollmentRef);
 	return { id: created.id, ...created.data() };
@@ -604,7 +623,7 @@ export async function completeStepAndAdvance(courseId, stepId) {
 
 	const payload = {
 		updatedAt: serverTimestamp(),
-		status: nextStep ? "in_progress" : "completed",
+		status: enrollment.status === "completed" ? "completed" : "in_progress",
 		currentStepId: nextStep?.id ?? stepId,
 		currentStepOrder: nextStep?.order ?? steps[currentStepIndex].order,
 		[`stepProgress.${stepId}.completedAt`]: serverTimestamp(),
@@ -613,10 +632,6 @@ export async function completeStepAndAdvance(courseId, stepId) {
 
 	if (!enrollment.stepProgress?.[stepId]?.selectedSoftwareId) {
 		payload[`stepProgress.${stepId}.selectedSoftwareId`] = steps[currentStepIndex].defaultSoftwareId ?? null;
-	}
-
-	if (!nextStep) {
-		payload.completedAt = serverTimestamp();
 	}
 
 	await updateDoc(enrollmentRef, payload);
@@ -702,6 +717,10 @@ export async function submitQuizAttempt(courseId, answersByQuestionId) {
 	const enrollment = await getEnrollmentForCourse(courseId, { createIfMissing: true });
 
 	if (enrollment) {
+		const previousBestScore = enrollment.quiz?.score ?? null;
+		const bestScore =
+			typeof previousBestScore === "number" ? Math.max(previousBestScore, score) : score;
+		const hasCompletedAt = enrollment.completedAt != null;
 		const enrollmentRef = doc(
 			db,
 			TENANTS_COLLECTION,
@@ -712,11 +731,11 @@ export async function submitQuizAttempt(courseId, answersByQuestionId) {
 
 		await updateDoc(enrollmentRef, {
 			status: passed ? "completed" : enrollment.status,
-			completedAt: passed ? serverTimestamp() : enrollment.completedAt ?? null,
+			completedAt: hasCompletedAt ? enrollment.completedAt : passed ? serverTimestamp() : null,
 			updatedAt: serverTimestamp(),
 			quiz: {
-				passed,
-				score,
+				passed: passed || Boolean(enrollment.quiz?.passed),
+				score: bestScore,
 				passingPercent,
 				lastAttemptId: createdAttempt.id,
 				lastAttemptAt: serverTimestamp(),
@@ -756,32 +775,7 @@ export async function getLatestQuizAttempt(courseId) {
 }
 
 export async function isCurrentUserTenantAdmin(existingContext) {
-    try {
-        const context = existingContext ?? (await getCurrentUserContext());
-        console.log(`[isCurrentUserTenantAdmin] Checking admin for uid=${context.uid}, tenantId=${context.tenantId}`);
-        
-        const adminRef = doc(
-            db,
-            TENANTS_COLLECTION,
-            context.tenantId,
-            ADMINS_COLLECTION,
-            context.uid
-        );
-        
-        const adminSnapshot = await getDoc(adminRef);
-        const exists = adminSnapshot.exists();
-        console.log(`[isCurrentUserTenantAdmin] Result for ${context.uid}:`, exists);
-        console.log(`[isCurrentUserTenantAdmin] Full doc data:`, adminSnapshot.data());
-        return exists;
-    } catch (error) {
-        console.error(`[isCurrentUserTenantAdmin] ERROR:`, error.message, error.code);
-        throw error;
-    }
-}
-
-export async function selfAssignCurrentUserAsTenantAdmin() {
-	const context = await getCurrentUserContext();
-	console.log(`[selfAssignCurrentUserAsTenantAdmin] Starting for uid=${context.uid}, tenantId=${context.tenantId}`);
+	const context = existingContext ?? (await getCurrentUserContext());
 	const adminRef = doc(
 		db,
 		TENANTS_COLLECTION,
@@ -789,7 +783,19 @@ export async function selfAssignCurrentUserAsTenantAdmin() {
 		ADMINS_COLLECTION,
 		context.uid
 	);
-	console.log(`[selfAssignCurrentUserAsTenantAdmin] Admin doc path: tenants/${context.tenantId}/admins/${context.uid}`);
+	const adminSnapshot = await getDoc(adminRef);
+	return adminSnapshot.exists();
+}
+
+export async function selfAssignCurrentUserAsTenantAdmin() {
+	const context = await getCurrentUserContext();
+	const adminRef = doc(
+		db,
+		TENANTS_COLLECTION,
+		context.tenantId,
+		ADMINS_COLLECTION,
+		context.uid
+	);
 
 	await setDoc(
 		adminRef,
@@ -800,7 +806,6 @@ export async function selfAssignCurrentUserAsTenantAdmin() {
 		},
 		{ merge: true }
 	);
-	console.log(`[selfAssignCurrentUserAsTenantAdmin] Successfully created/updated admin document`);
 }
 
 async function assertCurrentUserIsTenantAdmin(existingContext) {
