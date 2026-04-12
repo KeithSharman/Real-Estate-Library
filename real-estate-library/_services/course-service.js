@@ -756,20 +756,32 @@ export async function getLatestQuizAttempt(courseId) {
 }
 
 export async function isCurrentUserTenantAdmin(existingContext) {
-	const context = existingContext ?? (await getCurrentUserContext());
-	const adminRef = doc(
-		db,
-		TENANTS_COLLECTION,
-		context.tenantId,
-		ADMINS_COLLECTION,
-		context.uid
-	);
-	const adminSnapshot = await getDoc(adminRef);
-	return adminSnapshot.exists();
+    try {
+        const context = existingContext ?? (await getCurrentUserContext());
+        console.log(`[isCurrentUserTenantAdmin] Checking admin for uid=${context.uid}, tenantId=${context.tenantId}`);
+        
+        const adminRef = doc(
+            db,
+            TENANTS_COLLECTION,
+            context.tenantId,
+            ADMINS_COLLECTION,
+            context.uid
+        );
+        
+        const adminSnapshot = await getDoc(adminRef);
+        const exists = adminSnapshot.exists();
+        console.log(`[isCurrentUserTenantAdmin] Result for ${context.uid}:`, exists);
+        console.log(`[isCurrentUserTenantAdmin] Full doc data:`, adminSnapshot.data());
+        return exists;
+    } catch (error) {
+        console.error(`[isCurrentUserTenantAdmin] ERROR:`, error.message, error.code);
+        throw error;
+    }
 }
 
 export async function selfAssignCurrentUserAsTenantAdmin() {
 	const context = await getCurrentUserContext();
+	console.log(`[selfAssignCurrentUserAsTenantAdmin] Starting for uid=${context.uid}, tenantId=${context.tenantId}`);
 	const adminRef = doc(
 		db,
 		TENANTS_COLLECTION,
@@ -777,6 +789,7 @@ export async function selfAssignCurrentUserAsTenantAdmin() {
 		ADMINS_COLLECTION,
 		context.uid
 	);
+	console.log(`[selfAssignCurrentUserAsTenantAdmin] Admin doc path: tenants/${context.tenantId}/admins/${context.uid}`);
 
 	await setDoc(
 		adminRef,
@@ -787,11 +800,7 @@ export async function selfAssignCurrentUserAsTenantAdmin() {
 		},
 		{ merge: true }
 	);
-
-	return {
-		uuid: context.uid,
-		tenantId: context.tenantId,
-	};
+	console.log(`[selfAssignCurrentUserAsTenantAdmin] Successfully created/updated admin document`);
 }
 
 async function assertCurrentUserIsTenantAdmin(existingContext) {

@@ -14,7 +14,7 @@ service cloud.firestore {
     }
 
     function hasProfile() {
-      return signedIn() && profileDoc(request.auth.uid).exists();
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
     function userTenantId() {
@@ -30,7 +30,8 @@ service cloud.firestore {
     }
 
     function allowSelfAdminBootstrap(tenantId) {
-      return tenantDoc(tenantId).exists() && tenantDoc(tenantId).data.allowSelfAdminBootstrap == true;
+      return exists(/databases/$(database)/documents/tenants/$(tenantId))
+        && tenantDoc(tenantId).data.allowSelfAdminBootstrap == true;
     }
 
     match /users/{uid} {
