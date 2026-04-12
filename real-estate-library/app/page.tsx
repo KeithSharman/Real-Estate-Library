@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { auth, provider } from '../_utils/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -22,7 +22,7 @@ interface ChecklistState {
   error: string;
 }
 
-export default function Home() {
+function HomeContent() {
   const [user] = useAuthState(auth);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -450,5 +450,13 @@ export default function Home() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-zinc-50 dark:bg-black" />}>
+      <HomeContent />
+    </Suspense>
   );
 }
