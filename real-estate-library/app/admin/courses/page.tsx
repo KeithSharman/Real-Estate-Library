@@ -10,6 +10,7 @@ import {
   listAllCourseTemplatesForTenant,
   removeCourseTemplate,
   seedDemoCourseTemplate,
+  seedDemoCourseTemplate2,
   setCourseTemplatePublishState,
 } from "@/_services/course-service";
 
@@ -77,6 +78,19 @@ export default function AdminCoursesPage() {
       await loadAdminData();
     } catch (seedError) {
       setError(seedError instanceof Error ? seedError.message : "Failed to seed demo template.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleSeedTemplate2() {
+    try {
+      setSaving(true);
+      setError("");
+      await seedDemoCourseTemplate2();
+      await loadAdminData();
+    } catch (seedError) {
+      setError(seedError instanceof Error ? seedError.message : "Failed to seed demo course 2.");
     } finally {
       setSaving(false);
     }
@@ -192,14 +206,24 @@ export default function AdminCoursesPage() {
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">Tenant Admin</p>
               <h1 className="mt-2 text-3xl font-semibold tracking-tight">Course Template Management</h1>
             </div>
-            <button
-              type="button"
-              onClick={handleSeedTemplate}
-              disabled={saving}
-              className="rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-60"
-            >
-              {saving ? "Working..." : "Seed Demo Template"}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleSeedTemplate}
+                disabled={saving}
+                className="rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-60"
+              >
+                {saving ? "Working..." : "Seed Demo Course 1"}
+              </button>
+              <button
+                type="button"
+                onClick={handleSeedTemplate2}
+                disabled={saving}
+                className="rounded-full bg-emerald-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60"
+              >
+                {saving ? "Working..." : "Seed Demo Course 2"}
+              </button>
+            </div>
           </div>
 
           {error && (

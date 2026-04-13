@@ -35,16 +35,25 @@ export default function SoftwareSelectPage({
 }) {
   const { courseId, stepId } = use(params);
   const router = useRouter();
-  const [user] = useAuthState(auth);
+  const [user, authLoading] = useAuthState(auth);
+  const [hasMounted, setHasMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [step, setStep] = useState<TemplateStep | null>(null);
   const [savingId, setSavingId] = useState("");
 
   useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  useEffect(() => {
     let isMounted = true;
 
     async function loadStep() {
+      if (authLoading) {
+        return;
+      }
+
       if (!user) {
         setLoading(false);
         return;
@@ -79,7 +88,13 @@ export default function SoftwareSelectPage({
     return () => {
       isMounted = false;
     };
-  }, [courseId, stepId, user]);
+  }, [authLoading, courseId, stepId, user]);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setLoading(false);
+    }
+  }, [authLoading, user]);
 
   const softwareOptions = step?.softwareOptions ?? [];
 
@@ -93,6 +108,14 @@ export default function SoftwareSelectPage({
     } finally {
       setSavingId("");
     }
+  }
+
+  if (!hasMounted || authLoading || loading) {
+    return (
+      <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
+        <div className="mx-auto max-w-4xl px-6 py-8">Loading software options...</div>
+      </main>
+    );
   }
 
   if (!user) {
@@ -109,14 +132,6 @@ export default function SoftwareSelectPage({
             </Link>
           </div>
         </div>
-      </main>
-    );
-  }
-
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
-        <div className="mx-auto max-w-4xl px-6 py-8">Loading software options...</div>
       </main>
     );
   }

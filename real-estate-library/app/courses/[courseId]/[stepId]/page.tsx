@@ -15,6 +15,8 @@ import {
 interface SoftwareOption {
   id: string;
   name: string;
+  videoUrl?: string;
+  instructions?: string[];
 }
 
 interface TemplateStep {
@@ -95,7 +97,14 @@ export default function CourseStepPage({
   const steps = useMemo(() => template?.steps ?? [], [template]);
   const currentStepIndex = steps.findIndex((item) => item.id === stepId);
   const step = currentStepIndex >= 0 ? steps[currentStepIndex] : null;
-  const instructions = step?.instructions ?? [];
+  
+  const selectedSoftwareId = step?.id ? enrollment?.stepProgress?.[step.id]?.selectedSoftwareId : undefined;
+  const selectedSoftware = step?.softwareOptions?.find(
+    (option) => option.id === selectedSoftwareId
+  );
+  
+  const videoUrl = selectedSoftware?.videoUrl ?? step?.videoUrl;
+  const instructions = selectedSoftware?.instructions ?? step?.instructions ?? [];
   const isLastStep = currentStepIndex === steps.length - 1;
   const nextStepId = !isLastStep && currentStepIndex >= 0 ? steps[currentStepIndex + 1].id : null;
   const prevStepId = currentStepIndex > 0 ? steps[currentStepIndex - 1].id : null;
@@ -194,7 +203,7 @@ export default function CourseStepPage({
 
           <div className="mt-8 overflow-hidden rounded-3xl border border-zinc-200 dark:border-zinc-800">
             <div className="aspect-video">
-              <YouTubeEmbed videoUrl={step.videoUrl} title={`${step.title} training video`} />
+              <YouTubeEmbed videoUrl={videoUrl} title={`${step.title} training video`} />
             </div>
           </div>
 

@@ -45,7 +45,7 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 			title: "Select task to learn",
 			description:
 				"Choose which real estate workflow you want to complete and understand the basic steps involved.",
-			videoUrl: "https://www.youtube.com/watch?v=M7lc1UVf-VE",
+			videoUrl: "https://www.youtube.com/watch?v=5NV6Rdv1a3I",
 			instructions: [
 				"Review the workflow goals for this module.",
 				"Identify the systems your brokerage currently uses.",
@@ -80,7 +80,7 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 			title: "Client Intake in CRM",
 			description:
 				"Learn how to add a client and prepare their information for follow-up and transaction management.",
-			videoUrl: "https://www.youtube.com/watch?v=ysz5S6PUM-U",
+			videoUrl: "https://www.youtube.com/watch?v=kJQP7kiw5Fk",
 			instructions: [
 				"Create a new lead/contact record.",
 				"Enter client profile and property requirements.",
@@ -99,6 +99,12 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 						"Lead management",
 						"Task automation",
 					],
+					videoUrl: "https://www.youtube.com/watch?v=60ItHLz5WEA",
+					instructions: [
+						"Log into Salesforce and navigate to the Leads tab.",
+						"Click 'New' and enter the client's full name, company, and contact information.",
+						"Set the lead status, industry, and next activity date for follow-up reminders.",
+					],
 				},
 				{
 					id: "hubspot",
@@ -110,6 +116,12 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 						"Email integration",
 						"Deal tracking",
 						"Marketing automation",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=CevxZvSJLk8",
+					instructions: [
+						"Open HubSpot and go to Contacts → Create Contact.",
+						"Fill in email, phone, and property preferences.",
+						"Use the 'Tasks' sidebar to schedule follow-up calls and showings.",
 					],
 				},
 				{
@@ -123,6 +135,12 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 						"Mobile app",
 						"API integrations",
 					],
+					videoUrl: "https://www.youtube.com/watch?v=fJ9rUzIMcZQ",
+					instructions: [
+						"Launch Zoho CRM and create a new Contact record.",
+						"Populate the required fields: Name, Email, Phone, and Search Criteria.",
+						"Attach any documents or notes related to the client's requirements.",
+					],
 				},
 				{
 					id: "propertybase",
@@ -134,6 +152,12 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 						"Property tracking",
 						"Commission management",
 						"Transaction workflow",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=OPf0YbXqDm0",
+					instructions: [
+						"In Propertybase, create a new Buyer profile with contact details.",
+						"Link their preferred search criteria to trigger automatic MLS alerts.",
+						"Set up a follow-up workflow with milestones and commission tracking.",
 					],
 				},
 			],
@@ -152,7 +176,7 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 			title: "Create Property Listing",
 			description:
 				"Learn how to enter listing details into the MLS system, upload property photos, and verify that all required fields are completed correctly.",
-			videoUrl: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+			videoUrl: "https://www.youtube.com/watch?v=YQHsXMglC9A",
 			instructions: [
 				"Create a draft listing and fill all mandatory fields.",
 				"Upload and order photos for best presentation.",
@@ -171,6 +195,12 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 						"IDX feeds",
 						"Compliance tracking",
 					],
+					videoUrl: "https://www.youtube.com/watch?v=hT_nvWreIhg",
+					instructions: [
+						"Access your regional MLS system and select 'New Listing'.",
+						"Enter property address, price, beds/baths, and detailed description.",
+						"Upload and arrange photos in order of visual appeal.",
+					],
 				},
 				{
 					id: "zillow",
@@ -182,6 +212,12 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 						"Mortgage tools",
 						"Property search",
 						"Market data",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=JGwWNGJdvx8",
+					instructions: [
+						"Navigate to the Zillow for Professionals dashboard.",
+						"Enter listing details and import photos from your camera or cloud storage.",
+						"Publish to generate Zestimate and capture buyer inquiries.",
 					],
 				},
 				{
@@ -195,6 +231,12 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 						"Market reports",
 						"Lead capture",
 					],
+					videoUrl: "https://www.youtube.com/watch?v=09R8_2nJtjg",
+					instructions: [
+						"Log into Realtor.com's agent portal with your NAR credentials.",
+						"Add a new property and fill in MLS-verified information.",
+						"Sync your listing across multiple portals with one click.",
+					],
 				},
 				{
 					id: "flexmls",
@@ -202,6 +244,12 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 					description: "Advanced MLS platform with mobile tools",
 					category: "MLS Systems",
 					features: ["Mobile app", "Photo management", "Open house tools", "CMA reports"],
+					videoUrl: "https://www.youtube.com/watch?v=e-ORhEE9VVg",
+					instructions: [
+						"Use Flex MLS's mobile app to create a listing on-site at the property.",
+						"Organize photos and add virtual tour links directly in the app.",
+						"Set open house dates and receive notifications of showing requests.",
+					],
 				},
 			],
 			defaultSoftwareId: "mls-platform",
@@ -219,7 +267,7 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 			title: "Submit Required Documents",
 			description:
 				"Complete the workflow by finalizing documents, collecting signatures, and submitting to the correct destination.",
-			videoUrl: "https://www.youtube.com/watch?v=ScMzIvxBSi4",
+			videoUrl: "https://www.youtube.com/watch?v=450p7goxZqg",
 			instructions: [
 				"Package required forms for review.",
 				"Collect signatures and confirm form completeness.",
@@ -238,6 +286,12 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 						"Workflow automation",
 						"Compliance tracking",
 					],
+					videoUrl: "https://www.youtube.com/watch?v=pRpeEdMmmQ0",
+					instructions: [
+						"In DocuSign, upload the listing agreement PDF.",
+						"Place signature fields in correct locations and assign roles.",
+						"Send via email and track when all parties have signed.",
+					],
 				},
 				{
 					id: "adobe-sign",
@@ -245,6 +299,12 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 					description: "Alternative e-signature platform",
 					category: "E-Signature",
 					features: ["PDF integration", "Advanced security", "Bulk sending", "API access"],
+					videoUrl: "https://www.youtube.com/watch?v=RubBzkZzpUA",
+					instructions: [
+						"Open Adobe Sign and drag your document onto the canvas.",
+						"Click signature fields to mark text form fields and signatures.",
+						"Configure bulk sending for multiple signers if needed.",
+					],
 				},
 				{
 					id: "hellosign",
@@ -252,6 +312,12 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 					description: "Simple document signing solution",
 					category: "E-Signature",
 					features: ["Easy setup", "Team management", "Audit trails", "Mobile signing"],
+					videoUrl: "https://www.youtube.com/watch?v=ktvTqknDobU",
+					instructions: [
+						"In HelloSign, click 'Send' and upload your document.",
+						"Add signers' emails and set the signing order.",
+						"Customize the signing experience and send for signatures.",
+					],
 				},
 				{
 					id: "dotloop",
@@ -263,6 +329,12 @@ export const DEMO_COURSE_TEMPLATE_SEED = {
 						"Task tracking",
 						"Client communication",
 						"Commission tracking",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=M7lc1UVf-VE",
+					instructions: [
+						"Create a new transaction loop in DotLoop with property details.",
+						"Upload all required documents into the transaction checklist.",
+						"Assign tasks to team members and track document signatures in real-time.",
 					],
 				},
 			],
@@ -889,4 +961,353 @@ export async function removeCourseTemplate(courseId) {
 
 export async function seedDemoCourseTemplate() {
 	return createOrUpdateCourseTemplate(DEMO_COURSE_TEMPLATE_SEED);
+}
+
+export const DEMO_COURSE_TEMPLATE_SEED_2 = {
+	id: "buyer-representation-basics-template",
+	title: "Buyer Representation Basics",
+	category: "Buyer Services",
+	level: "Intermediate",
+	duration: "3 hours",
+	description:
+		"Master the complete buyer-side real estate workflow, from initial intake to a successful closing.",
+	status: "published",
+	version: 1,
+	tags: ["Buyer Services", "Onboarding", "Transaction Workflow"],
+	skills: ["Client Communication", "Offer Preparation", "Transaction Management"],
+	steps: [
+		{
+			id: "buyer-intake",
+			order: 1,
+			title: "Buyer Intake & CRM Setup",
+			description:
+				"Capture the buyer's needs, budget, and timeline in your CRM and prepare the representation agreement.",
+			videoUrl: "https://www.youtube.com/watch?v=M7lc1UVf-VE",
+			instructions: [
+				"Create a new buyer contact record in your CRM.",
+				"Record search criteria, budget range, and preferred locations.",
+				"Send the buyer representation agreement for signature.",
+			],
+			softwareOptions: [
+				{
+					id: "salesforce-buyer",
+					name: "Salesforce CRM",
+					description: "Track buyer profiles and communication history",
+					category: "CRM Platforms",
+					isRecommended: true,
+					features: [
+						"Contact management",
+						"Task reminders",
+						"Email integration",
+						"Pipeline tracking",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+					instructions: [
+						"Log into Salesforce Account and go to Accounts tab.",
+						"Create a new Account for the buyer with their budget and preferences.",
+						"Create multiple Opportunities for each property type they're interested in.",
+					],
+				},
+				{
+					id: "hubspot-buyer",
+					name: "HubSpot CRM",
+					description: "Free CRM with strong email and meeting tools",
+					category: "CRM Platforms",
+					features: [
+						"Free tier available",
+						"Meeting scheduler",
+						"Email tracking",
+						"Deal stages",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=9bZkp7q19f0",
+					instructions: [
+						"Open HubSpot and create a new Company for the buyer.",
+						"Add contacts and link them to the company.",
+						"Set up a Deal pipeline with stages: Initial Meeting, Pre-Approved, Offer, Closed.",
+					],
+				},
+				{
+					id: "propertybase-buyer",
+					name: "Propertybase",
+					description: "Real estate CRM with built-in buyer workflow tools",
+					category: "Real Estate CRM",
+					features: [
+						"MLS search integration",
+						"Buyer match alerts",
+						"Transaction tracking",
+						"Commission management",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+					instructions: [
+						"In Propertybase, create a Buyer Profile with contact information.",
+						"Link saved searches to auto-generate property alerts.",
+						"Set up the buyer's commission structure and tracking parameters.",
+					],
+				},
+			],
+			defaultSoftwareId: "salesforce-buyer",
+			resources: [
+				{
+					label: "Buyer intake checklist",
+					url: "https://example.com/buyer-intake-checklist",
+					type: "link",
+				},
+			],
+		},
+		{
+			id: "property-search",
+			order: 2,
+			title: "Property Search & Showings",
+			description:
+				"Use MLS and listing platforms to identify matching properties, schedule showings, and gather client feedback.",
+			videoUrl: "https://www.youtube.com/watch?v=ysz5S6PUM-U",
+			instructions: [
+				"Build an MLS search using the buyer's criteria.",
+				"Set up automated listing alerts for new matches.",
+				"Schedule and confirm showings, then log buyer feedback.",
+			],
+			softwareOptions: [
+				{
+					id: "mls-search",
+					name: "MLS Platform",
+					description: "Search and filter property listings on the MLS",
+					category: "MLS Systems",
+					isRecommended: true,
+					features: [
+						"Advanced search filters",
+						"Saved searches",
+						"Automated alerts",
+						"Showing scheduler",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+					instructions: [
+						"Access your regional MLS and create a new Saved Search.",
+						"Set search parameters: price range, beds/baths, location, property type.",
+						"Configure daily or weekly email alerts to the buyer with new listings.",
+					],
+				},
+				{
+					id: "zillow-search",
+					name: "Zillow",
+					description: "Consumer-facing search tool with additional market data",
+					category: "Listing Platforms",
+					features: [
+						"Zestimate data",
+						"Neighborhood info",
+						"3D tours",
+						"School ratings",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=2d2UgQM5r0U",
+					instructions: [
+						"Use Zillow's Saved Searches to create buyer-specific results.",
+						"Share links to properties and price trends with buyers.",
+						"Review Zestimate data and neighborhood ratings with the buyer.",
+					],
+				},
+				{
+					id: "realtor-search",
+					name: "Realtor.com",
+					description: "NAR-affiliated platform with accurate listing data",
+					category: "Listing Platforms",
+					features: [
+						"Accurate listing data",
+						"Open house info",
+						"Agent contact tools",
+						"Market trends",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=VZnPGnlJ9Rw",
+					instructions: [
+						"Create an account on Realtor.com Agent Portal.",
+						"Build searches based on buyer preferences.",
+						"Track Open House schedules and download property reports.",
+					],
+				},
+			],
+			defaultSoftwareId: "mls-search",
+			resources: [
+				{
+					label: "Showing feedback form",
+					url: "https://example.com/showing-feedback",
+					type: "link",
+				},
+			],
+		},
+		{
+			id: "offer-preparation",
+			order: 3,
+			title: "Offer Preparation & Submission",
+			description:
+				"Prepare a competitive purchase offer, collect buyer signatures, and submit to the listing agent.",
+			videoUrl: "https://www.youtube.com/watch?v=ScMzIvxBSi4",
+			instructions: [
+				"Complete the purchase agreement with all required fields.",
+				"Attach proof of funds or pre-approval letter.",
+				"Obtain buyer signatures and submit to listing agent.",
+			],
+			softwareOptions: [
+				{
+					id: "docusign-offer",
+					name: "DocuSign",
+					description: "Collect and send electronic signatures for offer documents",
+					category: "E-Signature",
+					isRecommended: true,
+					features: [
+						"Template library",
+						"Mobile signing",
+						"Audit trail",
+						"Deadline reminders",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=Ks-_Mh1QhMc",
+					instructions: [
+						"Open DocuSign and upload the purchase agreement.",
+						"Add Signature tabs, Initial tabs, and Date tabs in correct locations.",
+						"Send to buyer and listing agent with role assignments and reminders.",
+					],
+				},
+				{
+					id: "dotloop-offer",
+					name: "DotLoop",
+					description: "Real estate transaction platform for offer management",
+					category: "Transaction Management",
+					features: [
+						"Offer packaging",
+						"In-app editing",
+						"Brokerage compliance",
+						"Client sharing",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=TYzf2grPP-Q",
+					instructions: [
+						"In DotLoop, create a new Transaction Loop for the property.",
+						"Add all offer documents to the checklist.",
+						"Set signing rules and submit the complete loop to the listing agent.",
+					],
+				},
+			],
+			defaultSoftwareId: "docusign-offer",
+			resources: [
+				{
+					label: "Offer submission checklist",
+					url: "https://example.com/offer-checklist",
+					type: "link",
+				},
+			],
+		},
+		{
+			id: "closing-coordination",
+			order: 4,
+			title: "Closing Coordination",
+			description:
+				"Guide the buyer through inspections, contingencies, and the final closing process.",
+			videoUrl: "https://www.youtube.com/watch?v=DLzxrzFCyec",
+			instructions: [
+				"Order inspections and review reports with the buyer.",
+				"Track and clear all contingencies before closing.",
+				"Coordinate with the title company and attend the final closing.",
+			],
+			softwareOptions: [
+				{
+					id: "dotloop-closing",
+					name: "DotLoop",
+					description: "Manage closing tasks, documents, and deadlines",
+					category: "Transaction Management",
+					isRecommended: true,
+					features: [
+						"Task checklists",
+						"Deadline tracking",
+						"Document storage",
+						"Team collaboration",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=xo9d_8WRH6A",
+					instructions: [
+						"Update the DotLoop checklist with inspection and appraisal tasks.",
+						"Track contingency removal deadlines and closing date.",
+						"Coordinate document uploads with the title company and lender.",
+					],
+				},
+				{
+					id: "docusign-closing",
+					name: "DocuSign",
+					description: "Finalize closing documents with e-signatures",
+					category: "E-Signature",
+					features: [
+						"Bulk document sending",
+						"Identity verification",
+						"Real-time status",
+						"Secure storage",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=M7lc1UVf-VE",
+					instructions: [
+						"Prepare closing documents in DocuSign: closing disclosure, deed, title docs.",
+						"Set up signing order: buyer first, then notary, then lender.",
+						"Send links to buyers and monitor signature completion in real-time.",
+					],
+				},
+				{
+					id: "hellosign-closing",
+					name: "HelloSign",
+					description: "Simple e-signature option for closing paperwork",
+					category: "E-Signature",
+					features: [
+						"Easy to use",
+						"Audit trails",
+						"Team accounts",
+						"API access",
+					],
+					videoUrl: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+					instructions: [
+						"Upload final closing documents to HelloSign.",
+						"Assign signature roles and set signing order.",
+						"Send and wait for buyer and notary signatures; download signed PDFs.",
+					],
+				},
+			],
+			defaultSoftwareId: "dotloop-closing",
+			resources: [
+				{
+					label: "Closing day checklist",
+					url: "https://example.com/closing-checklist",
+					type: "link",
+				},
+			],
+		},
+	],
+	quiz: {
+		passingPercent: 80,
+		questions: [
+			{
+				id: "q1",
+				question: "What is the first step in the buyer representation workflow?",
+				options: ["Submit an offer", "Schedule showings", "Capture the buyer's needs in a CRM"],
+				correctAnswerIndex: 2,
+			},
+			{
+				id: "q2",
+				question: "What should you set up to notify buyers about new matching listings?",
+				options: ["Automated MLS alerts", "A printed newsletter", "A social media post"],
+				correctAnswerIndex: 0,
+			},
+			{
+				id: "q3",
+				question: "What document must be attached when submitting an offer?",
+				options: ["Tax return", "Pre-approval letter or proof of funds", "Property inspection report"],
+				correctAnswerIndex: 1,
+			},
+			{
+				id: "q4",
+				question: "What must be cleared before closing can occur?",
+				options: ["Social media announcements", "All contingencies", "The seller's moving schedule"],
+				correctAnswerIndex: 1,
+			},
+			{
+				id: "q5",
+				question: "Which platform is recommended for managing closing tasks and deadlines?",
+				options: ["Zillow", "MLS Platform", "DotLoop"],
+				correctAnswerIndex: 2,
+			},
+		],
+	},
+};
+
+export async function seedDemoCourseTemplate2() {
+	return createOrUpdateCourseTemplate(DEMO_COURSE_TEMPLATE_SEED_2);
 }
