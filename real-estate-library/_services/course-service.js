@@ -511,6 +511,16 @@ export async function listPublishedCourseTemplates() {
 		.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
 }
 
+export async function listPublishedCourseTemplatesPublic(tenantId = DEFAULT_BOOTSTRAP_TENANT_ID) {
+	const templatesRef = buildTenantCollectionPath(tenantId, COURSE_TEMPLATES_COLLECTION);
+	const templatesQuery = query(templatesRef, where("status", "==", "published"));
+	const snapshot = await getDocs(templatesQuery);
+
+	return snapshot.docs
+		.map((item) => ({ id: item.id, ...item.data() }))
+		.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+}
+
 export async function listAllCourseTemplatesForTenant() {
 	const context = await getCurrentUserContext();
 	const isAdmin = await isCurrentUserTenantAdmin(context);

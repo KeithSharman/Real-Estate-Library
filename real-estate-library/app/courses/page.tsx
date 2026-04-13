@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/_utils/firebase";
-import { listPublishedCourseTemplates } from "@/_services/course-service";
+import { listPublishedCourseTemplatesPublic } from '@/_services/course-service';
 
 interface CourseTemplate {
   id: string;
@@ -16,7 +14,6 @@ interface CourseTemplate {
 }
 
 export default function CoursesPage() {
-  const [user] = useAuthState(auth);
   const [courses, setCourses] = useState<CourseTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,17 +24,11 @@ export default function CoursesPage() {
     let isMounted = true;
 
     async function loadCourses() {
-      if (!user) {
-        setCourses([]);
-        setLoading(false);
-        return;
-      }
-
       setLoading(true);
       setError("");
 
       try {
-        const templates = await listPublishedCourseTemplates();
+        const templates = await listPublishedCourseTemplatesPublic();
 
         if (!isMounted) {
           return;
@@ -62,7 +53,7 @@ export default function CoursesPage() {
     return () => {
       isMounted = false;
     };
-  }, [user]);
+  }, []);
 
   const categories = useMemo(() => {
     const categorySet = new Set(["All courses"]);
@@ -185,21 +176,6 @@ export default function CoursesPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-              {!user && (
-                <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 md:col-span-2">
-                  <h2 className="text-xl font-semibold">Sign in required</h2>
-                  <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                    Course templates are now loaded from Firestore and require authentication.
-                  </p>
-                  <Link
-                    href="/"
-                    className="mt-5 inline-flex rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-500"
-                  >
-                    Go to sign in
-                  </Link>
-                </article>
-              )}
-
               {loading && (
                 <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 md:col-span-2">
                   Loading courses from Firestore...
@@ -212,13 +188,13 @@ export default function CoursesPage() {
                 </article>
               )}
 
-              {!loading && !error && user && filteredCourses.length === 0 && (
+              {!loading && !error && filteredCourses.length === 0 && (
                 <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 md:col-span-2">
                   No courses matched your search.
                 </article>
               )}
 
-              {!loading && !error && user && filteredCourses.map((course) => (
+              {!loading && !error && filteredCourses.map((course) => (
                 <article
                   key={course.id}
                   className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950"

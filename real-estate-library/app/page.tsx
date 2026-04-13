@@ -6,39 +6,26 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { auth, provider } from '../_utils/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { signInWithPopup, signOut } from 'firebase/auth';
-import { listPublishedCourseTemplates } from '../_services/course-service';
+import { listPublishedCourseTemplatesPublic } from '../_services/course-service';
 
 function HomeContent() {
   const [user] = useAuthState(auth);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [publishedCount, setPublishedCount] = useState(0);
+  const [courses, setCourses] = useState<{ id: string; title?: string; description?: string; category?: string; level?: string }[]>([]);
 
   useEffect(() => {
-    if (!user) return;
-    listPublishedCourseTemplates()
-      .then((templates) => setPublishedCount(templates.length))
-      .catch(() => setPublishedCount(0));
-  }, [user]);
-
-  const courses = [
-    {
-      title: "MLS Listing Essentials",
-      description: "Create and publish listings accurately with minimal supervision.",
-    },
-    {
-      title: "Transaction Workflows",
-      description: "Handle documents, approvals, and submissions step-by-step.",
-    },
-    {
-      title: "Client Intake & CRM",
-      description: "Standardize how new clients are added and managed.",
-    },
-    {
-      title: "Brokerage Software Stack",
-      description: "Train staff on the exact tools your company uses.",
-    },
-  ];
+    listPublishedCourseTemplatesPublic()
+      .then((templates) => {
+        setCourses(templates);
+        setPublishedCount(templates.length);
+      })
+      .catch(() => {
+        setCourses([]);
+        setPublishedCount(0);
+      });
+  }, []);
 
   const signin = async () => {
     try {
@@ -229,12 +216,14 @@ function HomeContent() {
                 </p>
               </div>
             </section>
+          </>
+        )}
 
-            <section id="courses" className="py-16">
-              <div className="mb-10 max-w-2xl">
-                <h2 className="text-3xl font-semibold tracking-tight">
-                  Ready-to-use training modules
-                </h2>
+        <section id="courses" className="py-16">
+          <div className="mb-10 max-w-2xl">
+            <h2 className="text-3xl font-semibold tracking-tight">
+              Ready-to-use training modules
+            </h2>
                 <p className="mt-3 text-zinc-600 dark:text-zinc-400">
                   Give your team structured workflows instead of inconsistent
                   shadowing and guesswork.
@@ -243,16 +232,28 @@ function HomeContent() {
 
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
                 {courses.map((course) => (
-                  <div
-                    key={course.title}
+                  <Link
+                    key={course.id}
+                    href={`/courses/${course.id}`}
                     className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950"
                   >
+                    {course.category && (
+                      <span className="mb-3 inline-block rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                        {course.category}
+                      </span>
+                    )}
                     <h3 className="text-lg font-semibold">{course.title}</h3>
                     <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
                       {course.description}
                     </p>
-                  </div>
+                    {course.level && (
+                      <p className="mt-3 text-xs text-zinc-400 dark:text-zinc-500">{course.level}</p>
+                    )}
+                  </Link>
                 ))}
+                {courses.length === 0 && (
+                  <p className="col-span-4 text-sm text-zinc-500 dark:text-zinc-400">No published courses yet.</p>
+                )}
               </div>
             </section>
 
@@ -281,8 +282,6 @@ function HomeContent() {
                 </div>
               </div>
             </section>
-          </>
-        )}
       </main>
     </div>
   );
