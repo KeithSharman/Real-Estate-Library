@@ -1,5 +1,5 @@
 import Link from "next/link";
-import YouTubeEmbed from "@/app/components/youtube-embed";
+import YouTubeEmbed from "@/app/components/ui/youtube-embed";
 
 export default async function TaskSelectionStep({
   params,

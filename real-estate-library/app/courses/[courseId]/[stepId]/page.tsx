@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, use } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter } from "next/navigation";
-import { auth } from "@/_utils/firebase";
-import YouTubeEmbed from "@/app/components/youtube-embed";
+import { auth } from "@/lib/firebase";
+import YouTubeEmbed from "@/app/components/ui/youtube-embed";
+import { getCourseTemplate } from "@/lib/services/course-service";
 import {
   completeStepAndAdvance,
-  getCourseTemplate,
   getEnrollmentForCourse,
-} from "@/_services/course-service";
+} from "@/lib/services/enrollment-service";
 
 interface SoftwareOption {
   id: string;
@@ -37,6 +37,12 @@ interface EnrollmentState {
   stepProgress?: Record<string, { selectedSoftwareId?: string }>;
 }
 
+/**
+ * Step-detail page for one course step.
+ *
+ * It merges template defaults with learner-specific selection state
+ * (software/video/instructions) so each learner sees their chosen path.
+ */
 export default function CourseStepPage({
   params,
 }: {
@@ -64,6 +70,7 @@ export default function CourseStepPage({
       setError("");
 
       try {
+        // Fetch template and enrollment together to keep step + progress in sync.
         const [courseTemplate, enrollmentState] = await Promise.all([
           getCourseTemplate(courseId),
           getEnrollmentForCourse(courseId, { createIfMissing: true }),
@@ -94,10 +101,12 @@ export default function CourseStepPage({
     };
   }, [courseId, user]);
 
+  // Resolve step and navigation pointers from ordered template steps.
   const steps = useMemo(() => template?.steps ?? [], [template]);
   const currentStepIndex = steps.findIndex((item) => item.id === stepId);
   const step = currentStepIndex >= 0 ? steps[currentStepIndex] : null;
   
+  // Learner-selected software can override default step media/instructions.
   const selectedSoftwareId = step?.id ? enrollment?.stepProgress?.[step.id]?.selectedSoftwareId : undefined;
   const selectedSoftware = step?.softwareOptions?.find(
     (option) => option.id === selectedSoftwareId
@@ -109,6 +118,7 @@ export default function CourseStepPage({
   const nextStepId = !isLastStep && currentStepIndex >= 0 ? steps[currentStepIndex + 1].id : null;
   const prevStepId = currentStepIndex > 0 ? steps[currentStepIndex - 1].id : null;
 
+  // Completing a step advances enrollment cursor, then routes to next selector or quiz.
   async function handleCompleteAndContinue() {
     if (!step) {
       return;

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { listPublishedCourseTemplatesPublic } from '@/_services/course-service';
+import { listPublishedCourseTemplatesPublic } from '@/lib/services/course-service';
 
 interface CourseTemplate {
   id: string;
@@ -13,6 +13,7 @@ interface CourseTemplate {
   duration?: string;
 }
 
+// Public catalog with client-side search and category filtering.
 export default function CoursesPage() {
   const [courses, setCourses] = useState<CourseTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +29,7 @@ export default function CoursesPage() {
       setError("");
 
       try {
+        // Uses public tenant-scoped read so this page can load before enrollment.
         const templates = await listPublishedCourseTemplatesPublic();
 
         if (!isMounted) {
@@ -66,6 +68,7 @@ export default function CoursesPage() {
   }, [courses]);
 
   const filteredCourses = useMemo(() => {
+    // Filter pipeline: category first, then free-text match across key metadata fields.
     return courses.filter((course) => {
       const inCategory =
         selectedCategory === "All courses" || course.category === selectedCategory;

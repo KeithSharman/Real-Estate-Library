@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { auth, provider } from '../_utils/firebase';
+import { auth, provider } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { signInWithPopup, signOut } from 'firebase/auth';
-import { listPublishedCourseTemplatesPublic } from '../_services/course-service';
+import { listPublishedCourseTemplatesPublic } from '@/lib/services/course-service';
 
+// Home page doubles as public landing + authenticated launch pad.
 function HomeContent() {
   const [user] = useAuthState(auth);
   const router = useRouter();
@@ -16,6 +17,7 @@ function HomeContent() {
   const [courses, setCourses] = useState<{ id: string; title?: string; description?: string; category?: string; level?: string }[]>([]);
 
   useEffect(() => {
+    // Public catalog read: used for both signed-out and signed-in home experiences.
     listPublishedCourseTemplatesPublic()
       .then((templates) => {
         setCourses(templates);
@@ -31,6 +33,7 @@ function HomeContent() {
     try {
       await signInWithPopup(auth, provider);
       const redirectTo = searchParams.get('redirect');
+      // middleware.ts sets this when protected route access is attempted while signed out.
       if (redirectTo && redirectTo.startsWith('/')) {
         router.push(redirectTo);
       } else {
@@ -289,6 +292,7 @@ function HomeContent() {
 
 export default function Home() {
   return (
+    // Suspense is required because useSearchParams is used inside HomeContent.
     <Suspense fallback={<div className="min-h-screen bg-zinc-50 dark:bg-black" />}>
       <HomeContent />
     </Suspense>

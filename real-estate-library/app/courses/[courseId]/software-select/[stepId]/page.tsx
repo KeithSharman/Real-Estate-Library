@@ -4,11 +4,9 @@ import Link from "next/link";
 import { useEffect, useState, use } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter } from "next/navigation";
-import { auth } from "@/_utils/firebase";
-import {
-  getCourseTemplate,
-  saveSelectedSoftwareForStep,
-} from "@/_services/course-service";
+import { auth } from "@/lib/firebase";
+import { getCourseTemplate } from "@/lib/services/course-service";
+import { saveSelectedSoftwareForStep } from "@/lib/services/enrollment-service";
 
 interface SoftwareOption {
   id: string;

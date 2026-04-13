@@ -3,11 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState, use } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/_utils/firebase";
-import {
-  getCourseTemplate,
-  getEnrollmentForCourse,
-} from "@/_services/course-service";
+import { auth } from "@/lib/firebase";
+import { getCourseTemplate } from "@/lib/services/course-service";
+import { getEnrollmentForCourse } from "@/lib/services/enrollment-service";
 
 interface SoftwareOption {
   id: string;
@@ -76,7 +74,7 @@ export default function CoursePage({
           return;
         }
 
-        setCourse(template as CourseTemplate);
+        setCourse(template as unknown as CourseTemplate);
         setEnrollment(progress as EnrollmentState | null);
       } catch (loadError) {
         if (!isMounted) {

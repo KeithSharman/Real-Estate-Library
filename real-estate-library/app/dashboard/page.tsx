@@ -3,11 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/_utils/firebase";
-import {
-  listPublishedCourseTemplates,
-  listUserEnrollmentsWithTemplates,
-} from "@/_services/course-service";
+import { auth } from "@/lib/firebase";
+import { listPublishedCourseTemplates } from "@/lib/services/course-service";
+import { listUserEnrollmentsWithTemplates } from "@/lib/services/enrollment-service";
 import type {ReactNode} from "react";
 
 interface PublishedCourse {
@@ -29,6 +27,7 @@ interface EnrollmentRow {
   };
 }
 
+// Dashboard combines learner progress and discovery data for one authenticated user.
 function formatTimestamp(timestampValue: unknown) {
   if (!timestampValue) {
     return "-";
@@ -75,6 +74,7 @@ export default function DashboardPage() {
       setError("");
 
       try {
+        // Load enrollments + published templates together for faster first paint.
         const [enrollmentData, publishedTemplates] = await Promise.all([
           listUserEnrollmentsWithTemplates(),
           listPublishedCourseTemplates(),
@@ -116,6 +116,7 @@ export default function DashboardPage() {
   );
 
   const recommendedCourses = useMemo(() => {
+    // Recommendations are currently simple: published templates not yet enrolled.
     const enrolledIds = new Set(enrollments.map((item) => item.courseId));
     return publishedCourses
       .filter((course) => !enrolledIds.has(course.id))

@@ -1,42 +1,52 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Authentication helper used by almost every rule block.
     function signedIn() {
       return request.auth != null;
     }
 
+    // Reads users/{uid} profile doc to resolve tenant membership.
     function profileDoc(uid) {
       return get(/databases/$(database)/documents/users/$(uid));
     }
 
+    // Reads tenants/{tenantId} doc for tenant-level flags.
     function tenantDoc(tenantId) {
       return get(/databases/$(database)/documents/tenants/$(tenantId));
     }
 
+    // Every tenant-scoped operation requires an existing user profile.
     function hasProfile() {
       return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
+    // Resolves tenantId from users/{uid}. Null when profile is missing.
     function userTenantId() {
       return hasProfile() ? profileDoc(request.auth.uid).data.tenantId : null;
     }
 
+    // Member means signed in and mapped to this tenant through users/{uid}.
     function isTenantMember(tenantId) {
       return hasProfile() && userTenantId() == tenantId;
     }
 
+    // Admin status is represented by tenants/{tenantId}/admins/{uid} existence.
     function isTenantAdmin(tenantId) {
       return signedIn() && exists(/databases/$(database)/documents/tenants/$(tenantId)/admins/$(request.auth.uid));
     }
 
+    // Controlled bootstrap path so first admin can self-grant only when enabled.
     function allowSelfAdminBootstrap(tenantId) {
       return exists(/databases/$(database)/documents/tenants/$(tenantId))
         && tenantDoc(tenantId).data.allowSelfAdminBootstrap == true;
     }
 
     match /users/{uid} {
+      // Users may only read/write their own profile.
       allow read: if signedIn() && request.auth.uid == uid;
       allow create: if signedIn() && request.auth.uid == uid;
+      // tenantId is immutable from client updates to prevent tenant switching.
       allow update: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.tenantId == resource.data.tenantId;
@@ -44,12 +54,14 @@ service cloud.firestore {
     }
 
     match /tenants/{tenantId} {
+      // Tenant document itself is readable by members and never writable from client.
       allow read: if isTenantMember(tenantId);
       allow write: if false;
 
       match /admins/{adminUid} {
         allow read: if isTenantMember(tenantId);
 
+        // Admin creation is allowed for existing tenant admins OR one-time self-bootstrap.
         allow create: if (
           isTenantAdmin(tenantId) ||
           (
@@ -64,12 +76,14 @@ service cloud.firestore {
       }
 
       match /courseTemplates/{courseId} {
+        // Learners can read published templates; drafts are admin-only.
         allow read: if resource.data.status == "published" || isTenantAdmin(tenantId);
         allow create, update, delete: if isTenantAdmin(tenantId)
           && request.resource.data.tenantId == tenantId;
       }
 
       match /enrollments/{enrollmentId} {
+        // Users can only read their own enrollment docs inside their tenant.
         allow read: if isTenantMember(tenantId)
           && (
             !exists(/databases/$(database)/documents/tenants/$(tenantId)/enrollments/$(enrollmentId))
@@ -81,6 +95,7 @@ service cloud.firestore {
           && request.resource.data.tenantId == tenantId
           && request.resource.data.courseId is string;
 
+        // Critical identity fields cannot change during update.
         allow update: if isTenantMember(tenantId)
           && resource.data.userId == request.auth.uid
           && request.resource.data.userId == resource.data.userId
@@ -91,6 +106,7 @@ service cloud.firestore {
       }
 
       match /quizAttempts/{attemptId} {
+        // Learners can only read their own quiz attempts.
         allow read: if isTenantMember(tenantId)
           && resource.data.userId == request.auth.uid;
 

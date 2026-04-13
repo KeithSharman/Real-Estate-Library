@@ -2,6 +2,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
+// Project lint baseline: Next.js recommended rules + TypeScript + explicit ignore list.
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,

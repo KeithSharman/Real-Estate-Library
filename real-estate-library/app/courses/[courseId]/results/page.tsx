@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState, use } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/_utils/firebase";
-import { getLatestQuizAttempt } from "@/_services/course-service";
+import { auth } from "@/lib/firebase";
+import { getLatestQuizAttempt } from "@/lib/services/quiz-service";
 
 interface QuizAttempt {
   id: string;

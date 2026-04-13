@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/_utils/firebase";
+import { auth } from "@/lib/firebase";
 import {
   addTenantAdminByEmail,
-  createOrUpdateCourseTemplate,
   isCurrentUserTenantAdmin,
+} from '@/lib/services/user-service';
+import {
+  createOrUpdateCourseTemplate,
   listAllCourseTemplatesForTenant,
   removeCourseTemplate,
   seedDemoCourseTemplate,
   seedDemoCourseTemplate2,
   setCourseTemplatePublishState,
-} from '@/_services/course-service';
+} from '@/lib/services/course-service';
 
 interface AdminTemplate {
   id: string;
@@ -24,6 +26,12 @@ interface AdminTemplate {
   duration?: string;
 }
 
+/**
+ * Tenant admin workspace for managing course templates and admin membership.
+ *
+ * This screen is intentionally metadata-first: detailed step editing lives in seed
+ * templates/services, while this page handles common operational actions quickly.
+ */
 export default function AdminCoursesPage() {
   const [user] = useAuthState(auth);
   const [loading, setLoading] = useState(true);
@@ -44,6 +52,7 @@ export default function AdminCoursesPage() {
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [addAdminMessage, setAddAdminMessage] = useState<{ text: string; isError: boolean } | null>(null);
 
+  // Loads admin authorization first, then fetches all templates for that tenant.
   const loadAdminData = useCallback(async () => {
     if (!user) {
       setLoading(false);
@@ -74,6 +83,7 @@ export default function AdminCoursesPage() {
     loadAdminData();
   }, [loadAdminData]);
 
+  // Seeds demo template 1 for quick tenant setup/testing.
   async function handleSeedTemplate() {
     try {
       setSaving(true);
@@ -87,6 +97,7 @@ export default function AdminCoursesPage() {
     }
   }
 
+  // Seeds demo template 2 for additional workflow coverage.
   async function handleSeedTemplate2() {
     try {
       setSaving(true);
@@ -100,6 +111,7 @@ export default function AdminCoursesPage() {
     }
   }
 
+  // Saves metadata-only fields; step content is handled by template payload itself.
   async function handleSaveTemplate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -135,6 +147,7 @@ export default function AdminCoursesPage() {
     }
   }
 
+  // Toggles draft/published state for learner visibility.
   async function handleTogglePublished(template: AdminTemplate) {
     try {
       setSaving(true);
@@ -148,6 +161,7 @@ export default function AdminCoursesPage() {
     }
   }
 
+  // Hard delete is confirmation-protected because data removal is permanent.
   async function handleDeleteTemplate(templateId: string) {
     const shouldDelete = window.confirm("Delete this template? This cannot be undone.");
     if (!shouldDelete) {
@@ -166,6 +180,7 @@ export default function AdminCoursesPage() {
     }
   }
 
+  // Grants admin role to an existing signed-in user by email.
   async function handleAddAdminByEmail(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     try {

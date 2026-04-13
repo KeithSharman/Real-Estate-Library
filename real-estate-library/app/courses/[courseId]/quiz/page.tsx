@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/_utils/firebase";
-import { getCourseTemplate, submitQuizAttempt } from "@/_services/course-service";
+import { auth } from "@/lib/firebase";
+import { getCourseTemplate } from "@/lib/services/course-service";
+import { submitQuizAttempt } from "@/lib/services/quiz-service";
 
 interface QuizQuestion {
   id: string;
@@ -21,6 +22,11 @@ interface CourseTemplate {
   };
 }
 
+/**
+ * Final quiz UI for a course.
+ *
+ * Answers are tracked by question id and submitted once all questions have a value.
+ */
 export default function QuizPage({
   params,
 }: {
@@ -75,8 +81,10 @@ export default function QuizPage({
   }, [courseId, user]);
 
   const quizQuestions = template?.quiz?.questions ?? [];
+  // Service can override this per course; UI defaults to 80 when missing.
   const passingPercent = template?.quiz?.passingPercent ?? 80;
 
+  // answer map: { [questionId]: selectedOptionIndex }
   const handleAnswerChange = (questionId: string, answerIndex: number) => {
     setAnswers(prev => ({
       ...prev,
@@ -84,6 +92,7 @@ export default function QuizPage({
     }));
   };
 
+  // Require full completion before grading to keep scoring semantics simple.
   const handleSubmit = async () => {
     if (Object.keys(answers).length !== quizQuestions.length) {
       return;

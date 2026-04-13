@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { onIdTokenChanged } from "firebase/auth";
-import { auth } from "@/_utils/firebase";
+import { auth } from "@/lib/firebase";
 
 const AUTH_COOKIE_NAME = "firebaseAuth";
 
