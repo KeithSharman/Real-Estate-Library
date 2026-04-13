@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/_utils/firebase";
 import {
+  addTenantAdminByEmail,
   createOrUpdateCourseTemplate,
   isCurrentUserTenantAdmin,
   listAllCourseTemplatesForTenant,
@@ -12,7 +13,7 @@ import {
   seedDemoCourseTemplate,
   seedDemoCourseTemplate2,
   setCourseTemplatePublishState,
-} from "@/_services/course-service";
+} from '@/_services/course-service';
 
 interface AdminTemplate {
   id: string;
@@ -39,6 +40,9 @@ export default function AdminCoursesPage() {
     description: "",
     status: "draft",
   });
+  const [adminEmail, setAdminEmail] = useState("");
+  const [addingAdmin, setAddingAdmin] = useState(false);
+  const [addAdminMessage, setAddAdminMessage] = useState<{ text: string; isError: boolean } | null>(null);
 
   const loadAdminData = useCallback(async () => {
     if (!user) {
@@ -162,6 +166,24 @@ export default function AdminCoursesPage() {
     }
   }
 
+  async function handleAddAdminByEmail(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    try {
+      setAddingAdmin(true);
+      setAddAdminMessage(null);
+      const uid = await addTenantAdminByEmail(adminEmail);
+      setAddAdminMessage({ text: `Admin granted to ${adminEmail} (uid: ${uid})`, isError: false });
+      setAdminEmail("");
+    } catch (addError) {
+      setAddAdminMessage({
+        text: addError instanceof Error ? addError.message : "Failed to add admin.",
+        isError: true,
+      });
+    } finally {
+      setAddingAdmin(false);
+    }
+  }
+
   if (!user) {
     return (
       <main className="min-h-screen bg-zinc-50 px-6 py-8 text-zinc-950 dark:bg-black dark:text-zinc-50">
@@ -207,6 +229,12 @@ export default function AdminCoursesPage() {
               <h1 className="mt-2 text-3xl font-semibold tracking-tight">Course Template Management</h1>
             </div>
             <div className="flex flex-wrap gap-2">
+              <Link
+                href="/"
+                className="rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+              >
+                Back to home
+              </Link>
               <button
                 type="button"
                 onClick={handleSeedTemplate}
@@ -229,6 +257,48 @@ export default function AdminCoursesPage() {
           {error && (
             <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/20 dark:text-red-200">
               {error}
+            </p>
+          )}
+        </section>
+
+        <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+          <h2 className="text-xl font-semibold">Add Admin by Email</h2>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            The user must have signed in at least once before you can grant admin access.
+          </p>
+          <form className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={handleAddAdminByEmail}>
+            <div className="flex flex-1 flex-col gap-1">
+              <label htmlFor="admin-email" className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                User email <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="admin-email"
+                name="admin-email"
+                type="email"
+                required
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                placeholder="user@example.com"
+                className="rounded-xl border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={addingAdmin}
+              className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60 dark:bg-zinc-50 dark:text-zinc-950"
+            >
+              {addingAdmin ? "Adding..." : "Add Admin"}
+            </button>
+          </form>
+          {addAdminMessage && (
+            <p
+              className={`mt-3 rounded-xl border px-3 py-2 text-sm ${
+                addAdminMessage.isError
+                  ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/20 dark:text-red-200"
+                  : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-200"
+              }`}
+            >
+              {addAdminMessage.text}
             </p>
           )}
         </section>

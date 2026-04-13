@@ -880,6 +880,40 @@ export async function selfAssignCurrentUserAsTenantAdmin() {
 	);
 }
 
+export async function addTenantAdminByEmail(email) {
+	const context = await assertCurrentUserIsTenantAdmin();
+	const usersRef = collection(db, USERS_COLLECTION);
+	const usersQuery = query(usersRef, where("email", "==", email), limit(1));
+	const snapshot = await getDocs(usersQuery);
+
+	if (snapshot.empty) {
+		throw new Error(
+			"No registered user found with that email. They must sign in at least once first."
+		);
+	}
+
+	const targetUid = snapshot.docs[0].id;
+	const adminRef = doc(
+		db,
+		TENANTS_COLLECTION,
+		context.tenantId,
+		ADMINS_COLLECTION,
+		targetUid
+	);
+
+	await setDoc(
+		adminRef,
+		{
+			uid: targetUid,
+			email,
+			createdAt: serverTimestamp(),
+		},
+		{ merge: true }
+	);
+
+	return targetUid;
+}
+
 async function assertCurrentUserIsTenantAdmin(existingContext) {
 	const context = existingContext ?? (await getCurrentUserContext());
 	const isAdmin = await isCurrentUserTenantAdmin(context);
